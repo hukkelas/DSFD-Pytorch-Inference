@@ -8,7 +8,7 @@ from dsfd import detect
 def draw_faces(im, bboxes):
     for bbox in bboxes:
         x0, y0, x1, y1 = [int(_) for _ in bbox]
-        cv2.rectangle(im, (x0, y0), (x1, y1), (0, 255, 0))
+        cv2.rectangle(im, (x0, y0), (x1, y1), (0, 0, 255))
 
 
 if __name__ == "__main__":
@@ -21,7 +21,7 @@ if __name__ == "__main__":
         im = cv2.imread(impath)
         print("Processing:", impath)
         t = time.time()
-        dets = detect.get_face_detections(im, 0.3, 0.3)[:, :4]
+        dets = detect.get_face_detections(im)[:, :4]
         print(f"Detection time: {time.time()- t:.3f}")
         draw_faces(im, dets)
         imname = os.path.basename(impath).split(".")[0]

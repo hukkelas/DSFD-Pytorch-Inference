@@ -191,7 +191,7 @@ print('Finished loading model!')
 # load data
 
 
-def get_face_detections(image, confidence_threshold, iou_threshold):
+def get_face_detections(image):
     t = time.time()
     max_im_shrink = (0x7fffffff / 200.0 / (image.shape[0] * image.shape[1])) ** 0.5 # the max size of input image for caffe
     max_im_shrink = 3 if max_im_shrink > 3 else max_im_shrink
