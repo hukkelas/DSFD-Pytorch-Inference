@@ -8,7 +8,7 @@ from dsfd import detect
 def draw_faces(im, bboxes):
     for bbox in bboxes:
         x0, y0, x1, y1 = [int(_) for _ in bbox]
-        cv2.rectangle(im, (x0, y0), (x1, y1), (0, 0, 255))
+        cv2.rectangle(im, (x0, y0), (x1, y1), (0, 0, 255), 2)
 
 
 if __name__ == "__main__":
