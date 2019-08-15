@@ -1,6 +1,6 @@
 # Dual Shot Face Detection - Pytorch Inference Code 
 A High-Performance Pytorch Implementation of the paper "[DSFD: Dual Shot Face Detector" (CVPR 2019).](http://openaccess.thecvf.com/content_CVPR_2019/papers/Li_DSFD_Dual_Shot_Face_Detector_CVPR_2019_paper.pdf).
-
+![](example_det.jpg)
 **NOTE** This implementation is based on the [original source code](https://github.com/TencentYoutuResearch/FaceDetection-DSFD)  released by the authors of the paper. This repo can only be used for inference of their model based on ResNet-152 and all training scripts are removed. If you want to finetune the model, we recommend you to use the original source code.
 
 ## Requirements
