@@ -8,7 +8,7 @@ import os
 
 if torch.cuda.is_available():
     torch.set_default_tensor_type("torch.cuda.FloatTensor")
-    torch.backends.cudnn.benchmark = True
+    #torch.backends.cudnn.benchmark = True
 
 confidence_threshold = .3
 nms_iou_threshold = .3
@@ -215,11 +215,3 @@ def get_face_detections(image, confidence_threshold, iou_threshold):
         dets = dets[0]
     return dets
 
-
-if __name__ == "__main__":
-    im = cv2.imread("test.jpg")
-    from src.visualization.utils import draw_faces
-    for i in range(3):
-        dets = get_face_detections(im, 0.3, 0.3)[:, :4]
-    im = draw_faces(im, dets)
-    cv2.imwrite("test_out.jpg", im)

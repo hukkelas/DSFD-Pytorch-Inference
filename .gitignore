@@ -7,3 +7,4 @@ __pycache__
 *.ipynb
 *.ckpt
 *.pth
+.vscode/
