@@ -15,15 +15,15 @@ if __name__ == "__main__":
     impaths = "images"
     impaths = glob.glob(os.path.join(impaths, "*.jpg"))
     confidence_threshold = .3
+    detector = detect.DSFDDetector()
     for impath in impaths:
-        
+
         if impath.endswith("out.jpg"): continue
-        
+
         im = cv2.imread(impath)
         print("Processing:", impath)
         t = time.time()
-        dets = detect.get_face_detections(im, confidence_threshold)[:, :4]
-        #print("RES:", dets)
+        dets = detector.detect_face(im, confidence_threshold)[:, :4]
         print(f"Detection time: {time.time()- t:.3f}")
         draw_faces(im, dets)
         imname = os.path.basename(impath).split(".")[0]

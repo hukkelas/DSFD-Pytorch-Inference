@@ -167,10 +167,8 @@ def bbox_vote(det):
     return dets[:750, :]
 
 
-detector = DSFDDetector()
-
-
-def get_face_detections(image,
+def get_face_detections(detector,
+                        image,
                         confidence_threshold,
                         use_multiscale_detect=False,
                         use_image_pyramid_detect=False,
