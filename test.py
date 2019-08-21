@@ -33,6 +33,4 @@ if __name__ == "__main__":
         )
 
         cv2.imwrite(output_path, im)
-        print("SAved im to:", output_path)
-        exit(0)
         

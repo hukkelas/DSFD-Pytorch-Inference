@@ -6,14 +6,14 @@ def to_cuda(elements):
     if torch.cuda.is_available():
         if type(elements) == tuple or type(elements) == list:
             return [x.to(get_device()) for x in elements]
-        return elements.to(get_device)
+        return elements.to(get_device())
     return elements
 
 
 def get_device():
     if torch.cuda.is_available():
-        return "cuda"
-    return "cpu"
+        return torch.device("cuda")
+    return torch.device("cpu")
 
 
 def image_to_torch(image, cuda=True):

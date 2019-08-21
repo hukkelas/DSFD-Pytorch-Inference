@@ -174,25 +174,25 @@ detector = DSFDDetector()
 
 def get_face_detections(image,
                         confidence_threshold,
-                        use_multiscale_detect=True,
+                        use_multiscale_detect=False,
                         use_image_pyramid_detect=False,
                         use_flip_detect=False):
     max_im_shrink = (0x7fffffff / 200.0 / (image.shape[0] * image.shape[1])) ** 0.5 # the max size of input image for caffe
     max_im_shrink = 3 if max_im_shrink > 3 else max_im_shrink
     shrink = max_im_shrink if max_im_shrink < 1 else 1
     dets = []
-    det0 = detector.detect_face(image, confidence_threshold, shrink)  
+    det0 = detector.detect_face(image, confidence_threshold, shrink)
     dets.append(det0)
     if use_flip_detect:
-        det1 = detector.flip_test(image, confidence_threshold, shrink)    
+        det1 = detector.flip_test(image, confidence_threshold, shrink)
         dets.append(det1)
     if use_multiscale_detect:
         det2, det3 = detector.multi_scale_test(image, confidence_threshold,
-                                               shrink=max_im_shrink)
+                                               max_im_shrink)
         dets.extend([det2, det3])
     if use_image_pyramid_detect:
         det4 = detector.multi_scale_test_pyramid(image, confidence_threshold,
-                                                 shrink=max_im_shrink)
+                                                 max_im_shrink)
         dets.append(det4)
     if len(dets) > 1:
         dets = np.row_stack(dets)
