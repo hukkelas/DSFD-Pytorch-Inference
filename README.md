@@ -47,7 +47,18 @@ detector = DSFDDetector(weight_path)
 detections = detector.detect_face(im, confidence_threshold=.5, shrink=1.0)
 ```
 
-This will return a tensor with shape `[N, 5]`, where $N$ is number of faces and the five elements are `[xmin, ymin, xmax, ymax, detection_confidence]`
+This will return a tensor with shape `[N, 5]`, where N is number of faces and the five elements are `[xmin, ymin, xmax, ymax, detection_confidence]`
+
+## Inference time
+
+This is **very roughly** estimated on a 1024x687 image. The reported time is the average over 100 runs. (With no cudnn benchmarking and no fp16 computation).
+
+
+| **Device**                                       | **MS**     |
+|----------------------------------------------|--------|
+| CPU (MacOS Mid '14 15-Inch, Intel 2.2GHz i7) | 17,496 |
+| GPU (1x NVIDIA V100-32GB)                    | 100    |
+|                                              |        |
 
 ## Replicate WIDER-Face performance
 For their results on the WIDER-Face dataset, they used detection over several image scales. This is replicated in the function `get_face_detections`. 
