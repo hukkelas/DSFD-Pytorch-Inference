@@ -3,6 +3,18 @@ import math
 from torchvision.ops.boxes import nms
 
 
+def to_cuda(elements):
+    if torch.cuda.is_available():
+        if type(elements) == tuple or type(elements) == list:
+            return [x.to(get_device()) for x in elements]
+        return elements.to(get_device)
+    return elements
+
+def get_device():
+    if torch.cuda.is_available():
+        return "cuda"
+    return "cpu"
+
 # Adapted from https://github.com/Hakuyume/chainer-ssd
 def decode(loc, priors, variances):
     """Decode locations from predictions using priors to undo

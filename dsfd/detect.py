@@ -1,14 +1,11 @@
 import torch
 from .face_ssd import build_ssd
 from .config import resnet152_model_config
+from . import utils
 import numpy as np
 import cv2
 import time
 import os
-
-if torch.cuda.is_available():
-    torch.set_default_tensor_type("torch.cuda.FloatTensor")
-    #torch.backends.cudnn.benchmark = True
 
 confidence_threshold = .3
 nms_iou_threshold = .3
@@ -30,7 +27,7 @@ def detect_face(image, shrink):
     x = torch.from_numpy(x).permute(2, 0, 1)
     x = x.unsqueeze(0)
 
-    x = x.cuda()
+    x = utils.to_cuda(x)
     #net.priorbox = PriorBoxLayer(width,height)
     with torch.no_grad():
         y = net(x, confidence_threshold, nms_iou_threshold)
@@ -183,8 +180,8 @@ weight_path = os.path.join(
     os.path.dirname(os.path.abspath(__file__)),
     os.path.join("weights", "WIDERFace_DSFD_RES152.pth")
 )
-net.load_state_dict(torch.load(weight_path))
-net.cuda()
+net.load_state_dict(torch.load(weight_path, map_location=utils.get_device()))
+utils.to_cuda(net)
 net.eval()
 print('Finished loading model!')
 
