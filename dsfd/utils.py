@@ -1,5 +1,6 @@
 import torch
 import math
+from . import torch_utils
 from torchvision.ops.boxes import nms
 
 
@@ -139,6 +140,7 @@ class PriorBox(object):
                 
         # back to torch land
         output = torch.Tensor(mean).view(-1, 4)
+        output = torch_utils.to_cuda(output)
         if self.clip:
             output.clamp_(max=1, min=0)
         return output
