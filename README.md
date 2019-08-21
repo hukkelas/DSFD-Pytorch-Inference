@@ -35,17 +35,26 @@ python3 test.py
 ```
 This will look for images in the `images/` folder, and save the results in the same folder with an ending `_out.jpg`
 
-## Inference hyperparameters
-There are several parameters to set for inference. By default, the values are:
+## Simple API
+To perform detection you can simple use the following lines:
+
+```python
+import cv2
+from dsfd.detect import DSFDDetector
+weight_path = "dsfd/weights/WIDERFace_DSFD_RES152.pth"
+im = cv2.imread("path_to_im.jpg")
+detector = DSFDDetector(weight_path)
+detections = detector.detect_face(im, confidence_threshold=.5, shrink=1.0)
 ```
-confidence_threshold = .3
-nms_iou_threshold = .3
-use_multiscale_detect = False
-use_flip_detect = False
-use_image_pyramid_detect = False
-```
+
+This will return a tensor with shape `[N, 5]`, where $N$ is number of faces and the five elements are `[xmin, ymin, xmax, ymax, detection_confidence]`
+
+## Replicate WIDER-Face performance
+For their results on the WIDER-Face dataset, they used detection over several image scales. This is replicated in the function `get_face_detections`. 
+
 `use_multiscale_detect` and `use_image_pyramid_detect` are very slow. In most cases, having all to `False` works well and is the fastest method. However, if you want to reproduce any of their results in the paper, we recommend you to turn all to `True`
 
+**NOTE**: We have (yet) not tried to replicate their results on any of the datasets presented in the paper.
 
 ## Citation
 If you find this code useful, remember to cite the original authors:

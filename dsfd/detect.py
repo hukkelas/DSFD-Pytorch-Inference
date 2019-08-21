@@ -11,19 +11,17 @@ class DSFDDetector:
 
     def __init__(
             self,
+            weight_path="dsfd/weights/WIDERFace_DSFD_RES152.pth",
             nms_iou_threshold=.3,
             ):
         self.nms_iou_threshold = nms_iou_threshold
-        self.load_model()
+        self.load_model(weight_path)
 
-    def load_model(self):
+    def load_model(self, weight_path):
         cfg = resnet152_model_config
         net = build_ssd(cfg)  # initialize SSD
 
-        weight_path = os.path.join(
-            os.path.dirname(os.path.abspath(__file__)),
-            os.path.join("weights", "WIDERFace_DSFD_RES152.pth")
-        )
+        weight_path = weight_path
         net.load_state_dict(torch.load(weight_path,
                                        map_location=torch_utils.get_device()))
         torch_utils.to_cuda(net)
