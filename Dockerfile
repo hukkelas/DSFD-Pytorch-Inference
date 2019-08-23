@@ -6,7 +6,6 @@ RUN pip uninstall -y torch torchvision
 RUN pip install --upgrade setuptools
 RUN pip install https://download.pytorch.org/whl/cu100/torch-1.1.0-cp36-cp36m-linux_x86_64.whl
 RUN pip install https://download.pytorch.org/whl/cu100/torchvision-0.3.0-cp36-cp36m-linux_x86_64.whl
-COPY  requirements.txt /workspace
 
 RUN pip install requests
 RUN pip install opencv-python
@@ -23,4 +22,3 @@ WORKDIR /workspace
 
 RUN mkdir /pytorch_models
 ENV TORCH_HOME=/workspace
-RUN pip install imagehash
