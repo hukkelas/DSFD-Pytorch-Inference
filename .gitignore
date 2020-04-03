@@ -6,6 +6,5 @@ __pycache__
 *.gz
 *.ipynb
 *.ckpt
-*.pth
 .vscode/
 *_out.jpg
