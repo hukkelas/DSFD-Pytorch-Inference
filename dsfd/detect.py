@@ -1,35 +1,34 @@
 import torch
 import numpy as np
 import cv2
-import os
 from .face_ssd import build_ssd
 from .config import resnet152_model_config
 from . import torch_utils
+from torch.hub import load_state_dict_from_url
+
+model_url = "https://github.com/hukkelas/DSFD-Pytorch-Inference/raw/master/weights/WIDERFace_DSFD_RES152.pth"
 
 
 class DSFDDetector:
 
-    def __init__(
+    def __init__(self):
+        state_dict = load_state_dict_from_url(
+            model_url,
+            map_location=torch_utils.get_device(),
+            progress=True,
+            check_hash=True)
+        self.net = build_ssd(resnet152_model_config)
+        self.net.load_state_dict(state_dict)
+        self.net.eval()
+        self.net = torch_utils.to_cuda(self.net)
+
+    @torch.no_grad()
+    def detect_face(
             self,
-            weight_path="dsfd/weights/WIDERFace_DSFD_RES152.pth",
-            nms_iou_threshold=.3,
-            ):
-        self.nms_iou_threshold = nms_iou_threshold
-        self.load_model(weight_path)
-
-    def load_model(self, weight_path):
-        cfg = resnet152_model_config
-        net = build_ssd(cfg)  # initialize SSD
-
-        weight_path = weight_path
-        net.load_state_dict(torch.load(weight_path,
-                                       map_location=torch_utils.get_device()))
-        torch_utils.to_cuda(net)
-        net.eval()
-        print('Finished loading model!')
-        self.net = net
-
-    def detect_face(self, image, confidence_threshold, shrink=1.0):
+            image: np.ndarray,
+            confidence_threshold: float,
+            nms_iou_threshold,
+            shrink=1.0):
         x = image
         if shrink != 1:
             x = cv2.resize(image, None, None, fx=shrink, fy=shrink,
@@ -39,8 +38,7 @@ class DSFDDetector:
         x -= np.array([104, 117, 123], dtype=np.float32)
         x = torch_utils.image_to_torch(x, cuda=True)
 
-        with torch.no_grad():
-            y = self.net(x, confidence_threshold, self.nms_iou_threshold)
+        y = self.net(x, confidence_threshold, nms_iou_threshold)
 
         detections = y.data.cpu().numpy()
 
@@ -51,31 +49,42 @@ class DSFDDetector:
         dets = np.roll(detections, 4, axis=-1)
         return dets[0]
 
-    def multi_scale_test(self, image, confidence_threshold, max_im_shrink):
+    def multi_scale_test(
+            self,
+            image: np.ndarray,
+            confidence_threshold: float,
+            nms_iou_threshold: float,
+            max_im_shrink: float):
         # shrink detecting and shrink only detect big face
         st = 0.5 if max_im_shrink >= 0.75 else 0.5 * max_im_shrink
-        det_s = self.detect_face(image, confidence_threshold, shrink=st)
+        det_s = self.detect_face(
+            image, confidence_threshold, nms_iou_threshold, shrink=st)
         if max_im_shrink > 0.75:
-            det2 = self.detect_face(image, confidence_threshold, shrink=0.75)
+            det2 = self.detect_face(
+                image, confidence_threshold, nms_iou_threshold, shrink=0.75)
             det_s = np.row_stack((det_s, det2))
         index = np.where(np.maximum(det_s[:, 2] - det_s[:, 0] + 1, det_s[:, 3] - det_s[:, 1] + 1) > 30)[0]
         det_s = det_s[index, :]
         # enlarge one times
         bt = min(2, max_im_shrink) if max_im_shrink > 1 else (st + max_im_shrink) / 2
-        det_b = self.detect_face(image, confidence_threshold, shrink=bt)
+        det_b = self.detect_face(
+            image, confidence_threshold, nms_iou_threshold, shrink=bt)
 
         # enlarge small iamge x times for small face
         if max_im_shrink > 1.5:
-            det3 = self.detect_face(image, confidence_threshold, shrink=1.5)
+            det3 = self.detect_face(
+                image, confidence_threshold, nms_iou_threshold, shrink=1.5)
             det_b = np.row_stack((det_b, det3))
         if max_im_shrink > 2:
             bt *= 2
             while bt < max_im_shrink:  # and bt <= 2:
-                det4 = self.detect_face(image, confidence_threshold, shrink=bt)
+                det4 = self.detect_face(
+                    image, confidence_threshold, nms_iou_threshold, shrink=bt)
                 det_b = np.row_stack((det_b, det4))
                 bt *= 2
-            det5 = self.detect_face(image, confidence_threshold,
-                                    shrink=max_im_shrink)
+            det5 = self.detect_face(
+                image, confidence_threshold, nms_iou_threshold,
+                shrink=max_im_shrink)
             det_b = np.row_stack((det_b, det5))
 
         # enlarge only detect small face
@@ -88,9 +97,15 @@ class DSFDDetector:
 
         return det_s, det_b
 
-    def multi_scale_test_pyramid(self, image, confidence_threshold, max_shrink):
+    def multi_scale_test_pyramid(
+            self,
+            image: np.ndarray,
+            confidence_threshold: float,
+            nms_iou_threshold: float,
+            max_shrink: float):
         # shrink detecting and shrink only detect big face
-        det_b = self.detect_face(image, confidence_threshold, shrink=0.25)
+        det_b = self.detect_face(
+            image, confidence_threshold, nms_iou_threshold, shrink=0.25)
         index = np.where(
             np.maximum(det_b[:, 2] - det_b[:, 0] + 1, det_b[:, 3] - det_b[:, 1] + 1)
             > 30)[0]
@@ -99,8 +114,8 @@ class DSFDDetector:
         st = [1.25, 1.75, 2.25]
         for i in range(len(st)):
             if (st[i] <= max_shrink):
-                det_temp = self.detect_face(image, confidence_threshold,
-                                            shrink=st[i])
+                det_temp = self.detect_face(
+                    image, confidence_threshold, nms_iou_threshold, shrink=st[i])
                 # enlarge only detect small face
                 if st[i] > 1:
                     index = np.where(
@@ -115,9 +130,15 @@ class DSFDDetector:
                 det_b = np.row_stack((det_b, det_temp))
         return det_b
 
-    def flip_test(self, image, confidence_threshold, shrink):
+    def flip_test(
+            self,
+            image: np.ndarray,
+            confidence_threshold: float,
+            nms_iou_threshold: float,
+            shrink: float):
         image_f = cv2.flip(image, 1)
-        det_f = self.detect_face(image_f, confidence_threshold, shrink=shrink)
+        det_f = self.detect_face(
+            image_f, confidence_threshold, nms_iou_threshold, shrink=shrink)
 
         det_t = np.zeros(det_f.shape)
         det_t[:, 0] = image.shape[1] - det_f[:, 2]
@@ -167,28 +188,32 @@ def bbox_vote(det):
     return dets[:750, :]
 
 
-def get_face_detections(detector,
-                        image,
-                        confidence_threshold,
-                        use_multiscale_detect=False,
-                        use_image_pyramid_detect=False,
-                        use_flip_detect=False):
+def get_face_detections(detector: DSFDDetector,
+                        image: np.ndarray,
+                        confidence_threshold: float,
+                        nms_iou_threshold: float,
+                        multiscale_detect: bool,
+                        image_pyramid_detect: bool,
+                        flip_detect: bool):
     max_im_shrink = (0x7fffffff / 200.0 / (image.shape[0] * image.shape[1])) ** 0.5 # the max size of input image for caffe
     max_im_shrink = 3 if max_im_shrink > 3 else max_im_shrink
     shrink = max_im_shrink if max_im_shrink < 1 else 1
     dets = []
-    det0 = detector.detect_face(image, confidence_threshold, shrink)
+    det0 = detector.detect_face(
+        image, confidence_threshold, nms_iou_threshold, shrink)
+
     dets.append(det0)
-    if use_flip_detect:
-        det1 = detector.flip_test(image, confidence_threshold, shrink)
+    if flip_detect:
+        det1 = detector.flip_test(
+            image, confidence_threshold, nms_iou_threshold, shrink)
         dets.append(det1)
-    if use_multiscale_detect:
-        det2, det3 = detector.multi_scale_test(image, confidence_threshold,
-                                               max_im_shrink)
+    if multiscale_detect:
+        det2, det3 = detector.multi_scale_test(
+            image, confidence_threshold, nms_iou_threshold, max_im_shrink)
         dets.extend([det2, det3])
-    if use_image_pyramid_detect:
-        det4 = detector.multi_scale_test_pyramid(image, confidence_threshold,
-                                                 max_im_shrink)
+    if image_pyramid_detect:
+        det4 = detector.multi_scale_test_pyramid(
+            image, confidence_threshold, nms_iou_threshold, max_im_shrink)
         dets.append(det4)
     if len(dets) > 1:
         dets = np.row_stack(dets)

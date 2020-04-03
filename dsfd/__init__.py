@@ -1,1 +1,1 @@
-from .detect import get_face_detections
+from .api import detect_faces
