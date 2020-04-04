@@ -1,6 +1,6 @@
 import torch
 import math
-from . import torch_utils
+from .. import torch_utils
 from torchvision.ops.boxes import nms
 
 
@@ -22,7 +22,7 @@ def decode(loc, priors, variances):
         priors[:, :2] + loc[:, :2] * variances[0] * priors[:, 2:],
         priors[:, 2:] * torch.exp(loc[:, 2:] * variances[1])), 1)
     boxes[:, :2] -= boxes[:, 2:] / 2
-    boxes[:, 2:] += boxes[:, :2]    
+    boxes[:, 2:] += boxes[:, :2]
     # (cx,cy,w,h)->(x0,y0,x1,y1)
     return boxes
 
@@ -81,7 +81,7 @@ class PriorBox(object):
     """Compute priorbox coordinates in center-offset form for each source
     feature map.
     """
-    def __init__(self, cfg , image_size, feature_maps):
+    def __init__(self, cfg, image_size, feature_maps):
         super(PriorBox, self).__init__()
         self.image_size = image_size
         self.feature_maps = feature_maps
@@ -109,35 +109,37 @@ class PriorBox(object):
             self.steps = self.steps[2:]
 
         for k, f in enumerate(self.feature_maps):
-            #for i, j in product(range(f), repeat=2):
             for i in range(f[0]):
-              for j in range(f[1]):
-                #f_k = self.image_size / self.steps[k]
-                f_k_i = self.image_size[0] / self.steps[k]
-                f_k_j = self.image_size[1] / self.steps[k]
-                # unit center x,y
-                cx = (j + 0.5) / f_k_j
-                cy = (i + 0.5) / f_k_i
-                # aspect_ratio: 1
-                # rel size: min_size
-                s_k_i = self.min_sizes[k]/self.image_size[1]
-                s_k_j = self.min_sizes[k]/self.image_size[0]
-                # swordli@tencent
-                if len(self.aspect_ratios[0]) == 0:
-                    mean += [cx, cy, s_k_i, s_k_j]
+                for j in range(f[1]):
 
-                # aspect_ratio: 1
-                # rel size: sqrt(s_k * s_(k+1))
-                #s_k_prime = sqrt(s_k * (self.max_sizes[k]/self.image_size))
-                if len(self.max_sizes) == len(self.min_sizes):
-                    s_k_prime_i = math.sqrt(s_k_i * (self.max_sizes[k]/self.image_size[1]))
-                    s_k_prime_j = math.sqrt(s_k_j * (self.max_sizes[k]/self.image_size[0]))    
-                    mean += [cx, cy, s_k_prime_i, s_k_prime_j]
-                # rest of aspect ratios
-                for ar in self.aspect_ratios[k]:
+                    f_k_i = self.image_size[0] / self.steps[k]
+                    f_k_j = self.image_size[1] / self.steps[k]
+
+                    # unit center x,y
+                    cx = (j + 0.5) / f_k_j
+                    cy = (i + 0.5) / f_k_i
+
+                    # aspect_ratio: 1
+                    # rel size: min_size
+                    s_k_i = self.min_sizes[k]/self.image_size[1]
+                    s_k_j = self.min_sizes[k]/self.image_size[0]
+
+                    if len(self.aspect_ratios[0]) == 0:
+                        mean += [cx, cy, s_k_i, s_k_j]
+
+                    # aspect_ratio: 1
+                    # rel size: sqrt(s_k * s_(k+1))
+
                     if len(self.max_sizes) == len(self.min_sizes):
-                        mean += [cx, cy, s_k_prime_i/math.sqrt(ar), s_k_prime_j*math.sqrt(ar)]
-                    mean += [cx, cy, s_k_i/math.sqrt(ar), s_k_j*math.sqrt(ar)]
+                        s_k_prime_i = math.sqrt(s_k_i * (self.max_sizes[k] / self.image_size[1]))
+                        s_k_prime_j = math.sqrt(s_k_j * (self.max_sizes[k] / self.image_size[0]))    
+                        mean += [cx, cy, s_k_prime_i, s_k_prime_j]
+
+                    # rest of aspect ratios
+                    for ar in self.aspect_ratios[k]:
+                        if len(self.max_sizes) == len(self.min_sizes):
+                            mean += [cx, cy, s_k_prime_i/math.sqrt(ar), s_k_prime_j*math.sqrt(ar)]
+                        mean += [cx, cy, s_k_i/math.sqrt(ar), s_k_j*math.sqrt(ar)]
 
         # back to torch land
         output = torch.Tensor(mean).view(-1, 4)

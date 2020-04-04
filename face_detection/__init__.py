@@ -1,2 +1,2 @@
-from .api import detect_faces
-from .detect import DSFDDetector
+from .build import build_detector
+from .dsfd import DSFDDetector
