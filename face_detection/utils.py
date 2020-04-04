@@ -138,7 +138,7 @@ class PriorBox(object):
                     if len(self.max_sizes) == len(self.min_sizes):
                         mean += [cx, cy, s_k_prime_i/math.sqrt(ar), s_k_prime_j*math.sqrt(ar)]
                     mean += [cx, cy, s_k_i/math.sqrt(ar), s_k_j*math.sqrt(ar)]
-                
+
         # back to torch land
         output = torch.Tensor(mean).view(-1, 4)
         output = torch_utils.to_cuda(output)

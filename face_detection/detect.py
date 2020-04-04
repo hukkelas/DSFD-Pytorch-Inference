@@ -1,12 +1,11 @@
 import torch
 import numpy as np
-import cv2
 from .face_ssd import build_ssd
 from .config import resnet152_model_config
 from . import torch_utils
 from torch.hub import load_state_dict_from_url
 
-model_url = "https://github.com/hukkelas/DSFD-Pytorch-Inference/raw/master/weights/WIDERFace_DSFD_RES152.pth"
+model_url = "http://folk.ntnu.no//haakohu/WIDERFace_DSFD_RES152.pth"
 
 
 class DSFDDetector:
@@ -15,10 +14,10 @@ class DSFDDetector:
         state_dict = load_state_dict_from_url(
             model_url,
             map_location=torch_utils.get_device(),
-            progress=True,
-            check_hash=True)
+            progress=True)
         self.net = build_ssd(resnet152_model_config)
         self.net.load_state_dict(state_dict)
+        
         self.net.eval()
         self.net = torch_utils.to_cuda(self.net)
 
@@ -30,14 +29,12 @@ class DSFDDetector:
             nms_iou_threshold,
             shrink=1.0):
         x = image
-        if shrink != 1:
-            x = cv2.resize(image, None, None, fx=shrink, fy=shrink,
-                           interpolation=cv2.INTER_LINEAR)
         height, width = x.shape[:2]
         x = x.astype(np.float32)
         x -= np.array([104, 117, 123], dtype=np.float32)
-        x = torch_utils.image_to_torch(x, cuda=True)
-
+        x = torch_utils.image_to_torch(x, cuda=False)
+        x = torch.nn.functional.interpolate(x, scale_factor=shrink)
+        x = torch_utils.to_cuda(x)
         y = self.net(x, confidence_threshold, nms_iou_threshold)
 
         detections = y.data.cpu().numpy()

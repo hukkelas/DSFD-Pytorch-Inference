@@ -8,3 +8,6 @@ __pycache__
 *.ckpt
 .vscode/
 *_out.jpg
+build/
+dist/
+*.egg-info/

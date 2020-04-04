@@ -7,6 +7,7 @@ from .utils import Detect, PriorBox
 
 
 class FEM(nn.Module):
+
     def __init__(self, channel_size):
         super(FEM, self).__init__()
         self.cs = channel_size
@@ -15,6 +16,7 @@ class FEM(nn.Module):
         self.cpm3 = nn.Conv2d( 256, 128, kernel_size=3, dilation=1, stride=1, padding=1)
         self.cpm4 = nn.Conv2d( 256, 128, kernel_size=3, dilation=2, stride=1, padding=2)
         self.cpm5 = nn.Conv2d( 128, 128, kernel_size=3, dilation=1, stride=1, padding=1)
+
     def forward(self, x):
         x1_1 = F.relu(self.cpm1(x), inplace=True)
         x1_2 = F.relu(self.cpm2(x), inplace=True)
