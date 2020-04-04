@@ -2,31 +2,34 @@ import torch
 import numpy as np
 from .face_ssd import build_ssd
 from .config import resnet152_model_config
-from . import torch_utils
+from .. import torch_utils
 from torch.hub import load_state_dict_from_url
+from ..base import Detector
+from ..build import DETECTOR_REGISTRY
 
 model_url = "http://folk.ntnu.no//haakohu/WIDERFace_DSFD_RES152.pth"
 
 
-class DSFDDetector:
+@DETECTOR_REGISTRY.register_module
+class DSFDDetector(Detector):
 
-    def __init__(self):
+    def __init__(
+            self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         state_dict = load_state_dict_from_url(
             model_url,
             map_location=torch_utils.get_device(),
             progress=True)
         self.net = build_ssd(resnet152_model_config)
         self.net.load_state_dict(state_dict)
-        
+
         self.net.eval()
         self.net = torch_utils.to_cuda(self.net)
 
     @torch.no_grad()
-    def detect_face(
+    def detect(
             self,
             image: np.ndarray,
-            confidence_threshold: float,
-            nms_iou_threshold,
             shrink=1.0):
         x = image
         height, width = x.shape[:2]
@@ -35,7 +38,8 @@ class DSFDDetector:
         x = torch_utils.image_to_torch(x, cuda=False)
         x = torch.nn.functional.interpolate(x, scale_factor=shrink)
         x = torch_utils.to_cuda(x)
-        y = self.net(x, confidence_threshold, nms_iou_threshold)
+        y = self.net(
+            x, self.confidence_threshold, self.nms_iou_threshold)
 
         detections = y.data.cpu().numpy()
 
@@ -49,38 +53,36 @@ class DSFDDetector:
     def multi_scale_test(
             self,
             image: np.ndarray,
-            confidence_threshold: float,
-            nms_iou_threshold: float,
             max_im_shrink: float):
         # shrink detecting and shrink only detect big face
         st = 0.5 if max_im_shrink >= 0.75 else 0.5 * max_im_shrink
-        det_s = self.detect_face(
+        det_s = self.detect(
             image, confidence_threshold, nms_iou_threshold, shrink=st)
         if max_im_shrink > 0.75:
-            det2 = self.detect_face(
-                image, confidence_threshold, nms_iou_threshold, shrink=0.75)
+            det2 = self.detect(
+                image, shrink=0.75)
             det_s = np.row_stack((det_s, det2))
         index = np.where(np.maximum(det_s[:, 2] - det_s[:, 0] + 1, det_s[:, 3] - det_s[:, 1] + 1) > 30)[0]
         det_s = det_s[index, :]
         # enlarge one times
         bt = min(2, max_im_shrink) if max_im_shrink > 1 else (st + max_im_shrink) / 2
-        det_b = self.detect_face(
-            image, confidence_threshold, nms_iou_threshold, shrink=bt)
+        det_b = self.detect(
+            image, shrink=bt)
 
         # enlarge small iamge x times for small face
         if max_im_shrink > 1.5:
-            det3 = self.detect_face(
-                image, confidence_threshold, nms_iou_threshold, shrink=1.5)
+            det3 = self.detect(
+                image, shrink=1.5)
             det_b = np.row_stack((det_b, det3))
         if max_im_shrink > 2:
             bt *= 2
             while bt < max_im_shrink:  # and bt <= 2:
-                det4 = self.detect_face(
-                    image, confidence_threshold, nms_iou_threshold, shrink=bt)
+                det4 = self.detect(
+                    image, shrink=bt)
                 det_b = np.row_stack((det_b, det4))
                 bt *= 2
-            det5 = self.detect_face(
-                image, confidence_threshold, nms_iou_threshold,
+            det5 = self.detect(
+                image,
                 shrink=max_im_shrink)
             det_b = np.row_stack((det_b, det5))
 
@@ -101,8 +103,8 @@ class DSFDDetector:
             nms_iou_threshold: float,
             max_shrink: float):
         # shrink detecting and shrink only detect big face
-        det_b = self.detect_face(
-            image, confidence_threshold, nms_iou_threshold, shrink=0.25)
+        det_b = self.detect(
+            image, shrink=0.25)
         index = np.where(
             np.maximum(det_b[:, 2] - det_b[:, 0] + 1, det_b[:, 3] - det_b[:, 1] + 1)
             > 30)[0]
@@ -111,8 +113,8 @@ class DSFDDetector:
         st = [1.25, 1.75, 2.25]
         for i in range(len(st)):
             if (st[i] <= max_shrink):
-                det_temp = self.detect_face(
-                    image, confidence_threshold, nms_iou_threshold, shrink=st[i])
+                det_temp = self.detect(
+                    image, shrink=st[i])
                 # enlarge only detect small face
                 if st[i] > 1:
                     index = np.where(
@@ -134,8 +136,8 @@ class DSFDDetector:
             nms_iou_threshold: float,
             shrink: float):
         image_f = cv2.flip(image, 1)
-        det_f = self.detect_face(
-            image_f, confidence_threshold, nms_iou_threshold, shrink=shrink)
+        det_f = self.detect(
+            image_f, shrink=shrink)
 
         det_t = np.zeros(det_f.shape)
         det_t[:, 0] = image.shape[1] - det_f[:, 2]
@@ -196,7 +198,7 @@ def get_face_detections(detector: DSFDDetector,
     max_im_shrink = 3 if max_im_shrink > 3 else max_im_shrink
     shrink = max_im_shrink if max_im_shrink < 1 else 1
     dets = []
-    det0 = detector.detect_face(
+    det0 = detector.detect(
         image, confidence_threshold, nms_iou_threshold, shrink)
 
     dets.append(det0)
