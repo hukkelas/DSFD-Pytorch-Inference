@@ -13,10 +13,10 @@ class Detector(ABC):
 
     def detect(
             self, image: np.ndarray) -> np.ndarray:
-        """Takes N images and performs and retunrs a set of bounding boxes as
+        """Takes an RGB image and performs and returns a set of bounding boxes as
             detections
         Args:
-            image (np.ndarray): shape [N, height, width, 3]
+            image (np.ndarray): shape [height, width, 3]
         Returns:
             np.ndarray: shape [N, 5] with (xmin, ymin, xmax, ymax, score)
         """

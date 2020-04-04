@@ -2,7 +2,9 @@ from .registry import build_from_cfg, Registry
 from .base import Detector
 
 available_detectors = [
-    "DSFDDetector"
+    "DSFDDetector",
+    "RetinaNetResNet50",
+    "RetinaNetMobileNetV1"
 ]
 DETECTOR_REGISTRY = Registry("DETECTORS")
 
