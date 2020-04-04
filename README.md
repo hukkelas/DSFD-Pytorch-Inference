@@ -5,14 +5,19 @@ A High-Performance Pytorch Implementation of the paper "[DSFD: Dual Shot Face De
 
 **NOTE** This implementation is based on the [original source code](https://github.com/TencentYoutuResearch/FaceDetection-DSFD)  released by the authors of the paper. This repo can only be used for inference of their model based on ResNet-152 and all training scripts are removed. If you want to finetune the model, we recommend you to use the original source code.
 
-## Requirements
+## Install
 
-- Python >= 3.6 
-- Pytorch >= 1.1
-- Torchvision >= 0.3.0
-- OpenCV
+You can install this repository with pip (requires python>=3.6);
 
-If you are familiar with Docker, we recommend you to use our custom [Dockerfile](Dockerfile) to set up your environment.
+```bash
+pip install face_detection
+```
+
+You can also install with the `setup.py`
+
+```bash
+python3 setup.py install
+```
 
 ## Improvements from original source code
 

@@ -2,7 +2,7 @@ import glob
 import os
 import cv2
 import time
-from dsfd import detect_faces
+from face_detection import detect_faces
 
 
 def draw_faces(im, bboxes):
