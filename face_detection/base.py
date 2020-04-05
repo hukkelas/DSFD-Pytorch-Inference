@@ -1,7 +1,6 @@
 import numpy as np
 import torch
 import typing
-from .torch_utils import get_device
 from abc import ABC, abstractmethod
 from torchvision.ops import nms
 from .box_utils import scale_boxes
@@ -13,10 +12,19 @@ class Detector(ABC):
             self,
             confidence_threshold: float,
             nms_iou_threshold: float,
-            device=get_device()):
+            device: torch.device,
+            max_resolution: int):
+        """
+        Args:
+            confidence_threshold (float): Threshold to filter out bounding boxes
+            nms_iou_threshold (float): Intersection over union threshold for non-maxima threshold
+            device ([type], optional): Defaults to cuda if cuda capable device is available.
+            max_resolution (int, optional): Max image resolution to do inference to.
+        """
         self.confidence_threshold = confidence_threshold
         self.nms_iou_threshold = nms_iou_threshold
         self.device = device
+        self.max_resolution = max_resolution
         self.mean = np.array(
             [123, 117, 104], dtype=np.float32).reshape(1, 1, 1, 3)
 
@@ -38,7 +46,7 @@ class Detector(ABC):
         """Takes N RGB image and performs and returns a set of bounding boxes as
             detections
         Args:
-            image (torch.Tensor): shape [N, height, width, 3]
+            image (torch.Tensor): shape [N, 3, height, width]
         Returns:
             torch.Tensor: of shape [N, B, 5] with (xmin, ymin, xmax, ymax, score)
         """
@@ -68,26 +76,45 @@ class Detector(ABC):
             final_output.append(output)
         return final_output
 
-    @torch.no_grad()
-    def batched_detect(
-            self, image: np.ndarray, shrink=1.0) -> typing.List[np.ndarray]:
+    def _pre_process(self, image: np.ndarray, shrink: float) -> torch.Tensor:
         """Takes N RGB image and performs and returns a set of bounding boxes as
             detections
         Args:
-            image (np.ndarray): shape [height, width, 3]
+            image (np.ndarray): shape [N, height, width, 3]
         Returns:
-            np.ndarray: a list with N set of bounding boxes of
-                shape [B, 5] with (xmin, ymin, xmax, ymax, score)
+            torch.Tensor: shape [N, 3, height, width]
         """
         assert image.dtype == np.uint8
         height, width = image.shape[1:3]
         image = image.astype(np.float32) - self.mean
         image = np.moveaxis(image, -1, 1)
         image = torch.from_numpy(image)
+        if self.max_resolution is not None:
+            shrink_factor = self.max_resolution / max((height, width))
+            if shrink_factor <= shrink:
+                shrink = shrink_factor
         image = torch.nn.functional.interpolate(image, scale_factor=shrink)
         image = image.to(self.device)
+        return image
+
+    def _batched_detect(self, image: np.ndarray) -> typing.List[np.ndarray]:
         boxes = self._detect(image)
         boxes = self.filter_boxes(boxes)
+        return boxes
+
+    @torch.no_grad()
+    def batched_detect(
+            self, image: np.ndarray, shrink=1.0) -> typing.List[np.ndarray]:
+        """Takes N RGB image and performs and returns a set of bounding boxes as
+            detections
+        Args:
+            image (np.ndarray): shape [N, height, width, 3]
+        Returns:
+            np.ndarray: a list with N set of bounding boxes of
+                shape [B, 5] with (xmin, ymin, xmax, ymax, score)
+        """
+        height, width = image.shape[1:3]
+        image = self._pre_process(image, shrink)
+        boxes = self._batched_detect(image)
         boxes = [scale_boxes((height, width), box).cpu().numpy() for box in boxes]
-        
         return boxes

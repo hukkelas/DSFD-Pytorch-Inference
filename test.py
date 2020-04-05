@@ -14,7 +14,10 @@ def draw_faces(im, bboxes):
 if __name__ == "__main__":
     impaths = "images"
     impaths = glob.glob(os.path.join(impaths, "*.jpg"))
-    detector = face_detection.build_detector()
+    detector = face_detection.build_detector(
+        "DSFDDetector",
+        max_resolution=1080
+    )
     for impath in impaths:
         if impath.endswith("out.jpg"): continue
         im = cv2.imread(impath)
