@@ -38,12 +38,27 @@ import face_detection
 print(face_detection.available_detectors)
 detector = face_detection.build_detector(
   "DSFDDetector", confidence_threshold=.5, nms_iou_threshold=.3)
-im = cv2.imread("path_to_im.jpg")
+# BGR to RGB
+im = cv2.imread("path_to_im.jpg")[:, :, ::-1]
 
 detections = detector.detect(im)
 ```
 
 This will return a tensor with shape `[N, 5]`, where N is number of faces and the five elements are `[xmin, ymin, xmax, ymax, detection_confidence]`
+
+### Batched inference
+
+```python
+import numpy as np
+import face_detection
+print(face_detection.available_detectors)
+detector = face_detection.build_detector(
+  "DSFDDetector", confidence_threshold=.5, nms_iou_threshold=.3)
+# [batch size, height, width, 3]
+images_dummy = np.zeros((2, 512, 512, 3))
+
+detections = detector.batched_detect(im)
+```
 
 
 ## Improvements

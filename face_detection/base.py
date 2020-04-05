@@ -6,6 +6,15 @@ from torchvision.ops import nms
 from .box_utils import scale_boxes
 
 
+def check_image(im: np.ndarray):
+    assert im.dtype == np.uint8,\
+        f"Expect image to have dtype np.uint8. Was: {im.dtype}"
+    assert len(im.shape) == 4,\
+        f"Expected image to have 4 dimensions. got: {im.shape}"
+    assert im.shape[-1] == 3,\
+        f"Expected image to be RGB, got: {im.shape[-1]} color channels"
+
+
 class Detector(ABC):
 
     def __init__(
@@ -113,6 +122,7 @@ class Detector(ABC):
             np.ndarray: a list with N set of bounding boxes of
                 shape [B, 5] with (xmin, ymin, xmax, ymax, score)
         """
+        check_image(image)
         height, width = image.shape[1:3]
         image = self._pre_process(image, shrink)
         boxes = self._batched_detect(image)
