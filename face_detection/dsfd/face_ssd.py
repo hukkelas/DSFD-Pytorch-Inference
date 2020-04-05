@@ -2,8 +2,8 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torchvision
-
-from .utils import Detect, PriorBox
+from .utils import PriorBox
+from ..box_utils import batched_decode
 
 
 class FEM(nn.Module):
@@ -101,7 +101,6 @@ class SSD(nn.Module):
 
         # Testing scenario
         self.softmax = nn.Softmax(dim=-1)
-        self.detect = Detect(self.cfg["variance"])
 
         # Cache to stop computing new priors per fowrard pass
         self.prior_cache = {
@@ -139,7 +138,7 @@ class SSD(nn.Module):
                     2: localization layers, Shape: [batch,num_priors*4]
                     3: priorbox layers, Shape: [2,num_priors*4]
         """
-        image_size = [x.shape[2] , x.shape[3]]
+        image_size = [x.shape[2], x.shape[3]]
         loc = list()
         conf = list()
 
@@ -193,17 +192,16 @@ class SSD(nn.Module):
             for o in conf], dim=1)
         # Test Phase
         self.priors = self.init_priors(featuremap_size, image_size)
+        self.priors = self.priors.to(face_conf.device)
         conf_preds = face_conf.view(
             face_conf.size(0), -1, self.num_classes).softmax(dim=-1)
         face_loc = face_loc.view(face_loc.size(0), -1, 4)
-
-        output = self.detect.forward(
-            face_loc,
-            conf_preds,
-            self.priors,
-            confidence_threshold,
-            nms_threshold
+        boxes = batched_decode(
+            face_loc, self.priors,
+            self.cfg["variance"]
         )
+        scores = conf_preds.view(-1, self.priors.shape[0], 2)[:, :, 1:]
+        output = torch.cat((boxes, scores), dim=-1)
         return output
 
     def mio_module(self, each_mmbox, len_conf):
@@ -287,5 +285,3 @@ def pa_multibox(output_channels, mbox_cfg, num_classes):
     return (loc_layers, conf_layers)
 
 
-def build_ssd(cfg):
-    return SSD(cfg)
