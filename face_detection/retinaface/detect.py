@@ -5,7 +5,7 @@ import numpy as np
 from .. import torch_utils
 import typing
 from .models.retinaface import RetinaFace
-from ..box_utils import decode
+from ..box_utils import batched_decode
 from .utils import decode_landm
 from .config import cfg_mnet, cfg_re50
 from .prior_box import PriorBox
@@ -20,10 +20,9 @@ class RetinaNetDetector(Detector):
     def __init__(
             self,
             model: str,
-            confidence_threshold: float,
-            nms_iou_threshold: float):
-        self.confidence_threshold = confidence_threshold
-        self.nms_iou_threshold = nms_iou_threshold
+            *args,
+            **kwargs):
+        super().__init__(*args, **kwargs)
         if model == "mobilenet":
             cfg = cfg_mnet
             state_dict = load_state_dict_from_url(
@@ -41,18 +40,9 @@ class RetinaNetDetector(Detector):
         net = RetinaFace(cfg=cfg)
         net.eval()
         net.load_state_dict(state_dict)
-        net = torch_utils.to_cuda(net)
-
         self.cfg = cfg
-        self.net = net
-        self.mean = np.array([123, 117, 104], dtype=np.float32)
-
-    def detect(
-            self, image: np.ndarray) -> np.ndarray:
-        # Expects BGR
-        image = image[:, :, ::-1]
-        detections, landmarks = self._detect(image)
-        return detections
+        self.net = net.to(self.device)
+        self.mean = np.array([104, 117, 123], dtype=np.float32)
 
     def detect_with_landmarks(
             self, image: np.ndarray) -> typing.Tuple[np.ndarray, np.ndarray]:
@@ -64,51 +54,68 @@ class RetinaNetDetector(Detector):
             np.ndarray: shape [N, 5] with (xmin, ymin, xmax, ymax, score)
             np.ndarray: shape [N, 5, 2] with 5 landmarks with (x, y)
         """
-        return self._detect(image)
+        image = image.astype(np.float32) - self.mean
+        image = np.moveaxis(image, -1, 1)
+        image = torch.from_numpy(image).to(self.device)
+        height, width = image.shape[2:]
+        boxes, landms = self._detect(image, return_landmarks=True)
+        scores = boxes[:, :, -1]
+        boxes = boxes[:, :, :-1]
+        final_output_box = []
+        final_output_landmarks = []
+        for i in range(len(boxes)):
+            boxes_ = boxes[i]
+            landms_ = landms[i]
+            scores_ = scores[i]
+            # Confidence thresholding
+            keep_idx = scores_ >= self.confidence_threshold
+            boxes_ = boxes_[keep_idx]
+            scores_ = scores_[keep_idx]
+            landms_ = landms_[keep_idx]
+            # Non maxima suppression
+            keep_idx = nms(
+                boxes_, scores_, self.nms_iou_threshold)
+            boxes_ = boxes_[keep_idx]
+            scores_ = scores_[keep_idx]
+            landms_ = landms_[keep_idx]
+            # Scale boxes
+            boxes_[:, [0, 2]] *= width
+            boxes_[:, [1, 3]] *= height
+            # Scale landmarks
+            landms_ = landms_.cpu().numpy().reshape(-1, 5, 2)
+            landms_[:, :, 0] *= width
+            landms_[:, :, 1] *= height
+            dets = torch.cat(
+                (boxes_, scores_.view(-1, 1)), dim=1).cpu().numpy()
+            final_output_box.append(dets)
+            final_output_landmarks.append(landms_)
+        return final_output_box, final_output_landmarks
 
     @torch.no_grad()
     def _detect(
-            self, image: np.ndarray) -> np.ndarray:
-        img = image
-        height, width = img.shape[:2]
-        assert img.dtype == np.uint8
-        assert img.shape[-1] == 3
-        img = img.astype(np.float32) - self.mean
-        img = torch_utils.image_to_torch(
-            img, cuda=True)
-        loc, conf, landms = self.net(img)  # forward pass
-        scores = conf.squeeze(0)[:, 1]
-        loc = loc.squeeze(0)
-        landms = landms.squeeze(0)
+            self, image: np.ndarray,
+            return_landmarks=False) -> np.ndarray:
+        """Batched detect
+        Args:
+            image (np.ndarray): shape [N, H, W, 3]
+        Returns:
+            boxes: list of length N with shape [num_boxes, 5] per element
+        """
+        image = image[:, [2, 1, 0]]
+        loc, conf, landms = self.net(image)  # forward pass
+        scores = conf[:, :, 1:]
+        height, width = image.shape[2:]
         priorbox = PriorBox(
             self.cfg, image_size=(height, width))
         priors = priorbox.forward()
-        priors = torch_utils.to_cuda(priors)
+        priors = torch_utils.to_cuda(priors, self.device)
         prior_data = priors.data
-        boxes = decode(loc, prior_data, self.cfg['variance'])
+        boxes = batched_decode(loc, prior_data, self.cfg['variance'])
         landms = decode_landm(landms, prior_data, self.cfg['variance'])
-        # Confidence thresholding
-        keep_idx = scores >= self.confidence_threshold
-        boxes = boxes[keep_idx]
-        scores = scores[keep_idx]
-        landms = landms[keep_idx]
-        # Non maxima suppression
-        keep_idx = nms(
-            boxes, scores, self.nms_iou_threshold)
-        boxes = boxes[keep_idx]
-        scores = scores[keep_idx]
-        landms = landms[keep_idx]
-        # Scale boxes
-        boxes[:, [0, 2]] *= width
-        boxes[:, [1, 3]] *= height
-        # Scale landmarks
-        landms = landms.cpu().numpy().reshape(-1, 5, 2)
-        landms[:, :, 0] *= width
-        landms[:, :, 1] *= height
-        dets = torch.cat(
-            (boxes, scores.view(-1, 1)), dim=1).cpu().numpy()
-
-        return dets, landms
+        boxes = torch.cat((boxes, scores), dim=-1)
+        if return_landmarks:
+            return boxes, landms
+        return boxes
 
 
 @DETECTOR_REGISTRY.register_module

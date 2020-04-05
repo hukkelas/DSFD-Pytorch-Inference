@@ -1,6 +1,7 @@
 import torch
 import numpy as np
-from .face_ssd import build_ssd
+import typing
+from .face_ssd import SSD
 from .config import resnet152_model_config
 from .. import torch_utils
 from torch.hub import load_state_dict_from_url
@@ -20,35 +21,25 @@ class DSFDDetector(Detector):
             model_url,
             map_location=torch_utils.get_device(),
             progress=True)
-        self.net = build_ssd(resnet152_model_config)
+        self.net = SSD(resnet152_model_config)
         self.net.load_state_dict(state_dict)
-
         self.net.eval()
-        self.net = torch_utils.to_cuda(self.net)
+        self.net = self.net.to(self.device)
 
     @torch.no_grad()
-    def detect(
-            self,
-            image: np.ndarray,
-            shrink=1.0):
-        x = image
-        height, width = x.shape[:2]
-        x = x.astype(np.float32)
-        x -= np.array([104, 117, 123], dtype=np.float32)
-        x = torch_utils.image_to_torch(x, cuda=False)
-        x = torch.nn.functional.interpolate(x, scale_factor=shrink)
-        x = torch_utils.to_cuda(x)
-        y = self.net(
-            x, self.confidence_threshold, self.nms_iou_threshold)
-
-        detections = y.data.cpu().numpy()
-
-        scale = np.array([width, height, width, height])
-        detections[:, :, 1:] *= (scale / shrink)
-
-        # Move axis such that we get #[xmin, ymin, xmax, ymax, det_conf]
-        dets = np.roll(detections, 4, axis=-1)
-        return dets[0]
+    def _detect(self, x: torch.Tensor,) -> typing.List[np.ndarray]:
+        """Batched detect
+        Args:
+            image (np.ndarray): shape [N, H, W, 3]
+        Returns:
+            boxes: list of length N with shape [num_boxes, 5] per element
+        """
+        # Expects BGR
+        x = x[:, [2, 1, 0], :, :]
+        boxes = self.net(
+            x, self.confidence_threshold, self.nms_iou_threshold
+        )
+        return boxes
 
     def multi_scale_test(
             self,

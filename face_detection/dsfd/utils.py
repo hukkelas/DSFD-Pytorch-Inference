@@ -1,58 +1,5 @@
 import torch
 import math
-from .. import torch_utils
-from torchvision.ops.boxes import nms
-from ..box_utils import decode
-
-
-class Detect:
-    """At test time, Detect is the final layer of SSD.  Decode location preds,
-    apply non-maximum suppression to location predictions based on conf
-    scores and threshold to a top_k number of output predictions for both
-    confidence score and locations.
-    """
-    def __init__(self, variance):
-        self.variance = variance
-
-    def forward(self, loc_data, conf_data, prior_data, confidence_threshold, nms_threshold):
-        """
-        Args:
-            loc_data: (tensor) Loc preds from loc layers
-                Shape: [batch,num_priors*4]
-            conf_data: (tensor) Shape: Conf preds from conf layers
-                Shape: [batch*num_priors,num_classes]
-            prior_data: (tensor) Prior boxes and variances from priorbox layers
-                Shape: [1,num_priors,4]
-        """
-        num = loc_data.size(0)  # batch size
-        num_priors = prior_data.size(0)
-
-        conf_preds = conf_data.view(num, num_priors,  2).transpose(2, 1)
-
-        final_ouput = []
-        for i in range(num):
-
-            default = prior_data
-            decoded_boxes = decode(loc_data[i], default, self.variance)
-            conf_scores = conf_preds[i, 1]
-            # Very costly operation, conf_score shape: [172845]
-            indices = (conf_scores >= confidence_threshold).nonzero().squeeze()
-            decoded_boxes = decoded_boxes[indices]
-
-            conf_scores = conf_scores[indices]
-            if conf_scores.dim() == 0:
-                final_ouput.append(torch.empty(0, 5))
-                continue
-            keep_idx = nms(decoded_boxes, conf_scores, nms_threshold)
-
-            scores = conf_scores[keep_idx].view(1, -1, 1)
-            boxes = decoded_boxes[keep_idx].view(1, -1, 4)
-            output = torch.cat((scores, boxes), dim=-1)
-            final_ouput.append(output)
-        if num == 1:
-            return final_ouput[0]
-        final_ouput = torch.cat(final_ouput, dim=0)
-        return final_ouput
 
 
 class PriorBox(object):
@@ -121,7 +68,6 @@ class PriorBox(object):
 
         # back to torch land
         output = torch.Tensor(mean).view(-1, 4)
-        output = torch_utils.to_cuda(output)
         if self.clip:
             output.clamp_(max=1, min=0)
         return output
