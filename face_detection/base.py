@@ -127,4 +127,10 @@ class Detector(ABC):
         image = self._pre_process(image, shrink)
         boxes = self._batched_detect(image)
         boxes = [scale_boxes((height, width), box).cpu().numpy() for box in boxes]
+        self.validate_detections(boxes)
         return boxes
+
+    def validate_detections(self, boxes: typing.List[np.ndarray]):
+        for box in boxes:
+            assert np.all(box[:, 4] <= 1) and np.all(box[:, 4] >= 0),\
+                f"Confidence values not valid: {box}"
