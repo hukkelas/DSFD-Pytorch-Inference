@@ -2,7 +2,7 @@ import setuptools
 
 setuptools.setup(
     name="face_detection",
-    version="0.1.3",
+    version="0.1.4",
     author="Håkon Hukkelås",
     description="A simple and lightweight package for state of the art face detection with GPU support.",
     long_description="".join(open("README.md", "r").readlines()),
