@@ -87,14 +87,19 @@ We've done the following improvements:
 This is **very roughly** estimated on a 1024x687 image. The reported time is the average over 100 runs. (With no cudnn benchmarking and no fp16 computation).
 
 
-|Model| **Device** | **MS** |
-|-|----------------------------------------------|--------|
-|DSFDDetector| CPU (MacOS Mid '14 15-Inch, Intel 2.2GHz i7) | 17,496 |
-|DSFDDetector| GPU (1x NVIDIA V100-32GB)|100|
-|RetinaNetResNet50| CPU (MacOS Mid '14 15-Inch, Intel 2.2GHz i7) |3428|
-|RetinaNetResNet50| GPU (1x NVIDIA V100-32GB)||
-|RetinaNetMobileNetV1| CPU (MacOS Mid '14 15-Inch, Intel 2.2GHz i7)|281|
-|RetinaNetMobileNetV1| GPU (1x NVIDIA V100-32GB)||
+
+This is **very roughly** estimated on a 1024x687 image. The reported time is the average over 1000 forward passes on a single image. (With no cudnn benchmarking and no fp16 computation).
+
+
+| | DSFDDetector | RetinaNetResNet50 | RetinaNetMobileNetV1 |
+| -|-|-|-|
+| CPU (Intel 2.2GHz i7) *| 17,496 ms (0.06 FPS) | 2970ms (0.33 FPS) | 270ms (3.7 FPS) | 
+| NVIDIA V100-32GB | 100ms (10 FPS) | | |
+| NVIDIA GTX 1060 6GB | 341ms (2.9 FPS) | 76.6ms (13 FPS) | 48.2ms (20.7 FPS) | 
+| NVIDIA T4 16 GB | 482 ms (2.1 FPS) | 181ms (5.5 FPS) | 178ms (5.6 FPS) |
+
+*Done over 100 forward passes on a MacOS Mid 2014, 15-Inch.
+
 
 
 
