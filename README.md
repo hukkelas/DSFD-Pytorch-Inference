@@ -84,10 +84,6 @@ We've done the following improvements:
 
 ## Inference time
 
-This is **very roughly** estimated on a 1024x687 image. The reported time is the average over 100 runs. (With no cudnn benchmarking and no fp16 computation).
-
-
-
 This is **very roughly** estimated on a 1024x687 image. The reported time is the average over 1000 forward passes on a single image. (With no cudnn benchmarking and no fp16 computation).
 
 
