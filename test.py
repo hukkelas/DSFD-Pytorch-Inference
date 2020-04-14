@@ -23,7 +23,9 @@ if __name__ == "__main__":
         im = cv2.imread(impath)
         print("Processing:", impath)
         t = time.time()
-        dets = detector.detect(im)[:, :4]
+        dets = detector.detect(
+            im[:, :, ::-1]
+        )[:, :4]
         print(f"Detection time: {time.time()- t:.3f}")
         draw_faces(im, dets)
         imname = os.path.basename(impath).split(".")[0]
