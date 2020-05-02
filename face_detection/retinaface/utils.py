@@ -21,5 +21,5 @@ def decode_landm(pre, priors, variances):
                         priors[:, :, :2] + pre[:, :, 4:6] * variances[0] * priors[:, :, 2:],
                         priors[:, :, :2] + pre[:, :, 6:8] * variances[0] * priors[:, :, 2:],
                         priors[:, :, :2] + pre[:, :, 8:10] * variances[0] * priors[:, :, 2:],
-                        ), dim=1)
+                        ), dim=2)
     return landms
