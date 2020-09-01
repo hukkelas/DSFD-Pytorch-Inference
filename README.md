@@ -13,7 +13,7 @@ This repository includes:
 You can install this repository with pip (requires python>=3.6);
 
 ```bash
-pip install face_detection
+pip install git+https://github.com/hukkelas/DSFD-Pytorch-Inference.git
 ```
 
 You can also install with the `setup.py`
@@ -98,7 +98,8 @@ This is **very roughly** estimated on a 1024x687 image. The reported time is the
 
 
 
-
+## Changelog 
+  - September 1st 2020: added support for fp16/mixed precision inference
 
 ## Citation
 If you find this code useful, remember to cite the original authors:

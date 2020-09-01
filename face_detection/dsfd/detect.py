@@ -36,7 +36,8 @@ class DSFDDetector(Detector):
         """
         # Expects BGR
         x = x[:, [2, 1, 0], :, :]
-        boxes = self.net(
-            x, self.confidence_threshold, self.nms_iou_threshold
-        )
+        with torch.cuda.amp.autocast(enabled=self.fp16_inference):
+            boxes = self.net(
+                x, self.confidence_threshold, self.nms_iou_threshold
+            )
         return boxes

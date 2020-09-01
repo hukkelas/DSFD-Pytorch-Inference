@@ -102,16 +102,17 @@ class RetinaNetDetector(Detector):
             boxes: list of length N with shape [num_boxes, 5] per element
         """
         image = image[:, [2, 1, 0]]
-        loc, conf, landms = self.net(image)  # forward pass
-        scores = conf[:, :, 1:]
-        height, width = image.shape[2:]
-        priorbox = PriorBox(
-            self.cfg, image_size=(height, width))
-        priors = priorbox.forward()
-        priors = torch_utils.to_cuda(priors, self.device)
-        prior_data = priors.data
-        boxes = batched_decode(loc, prior_data, self.cfg['variance'])
-        boxes = torch.cat((boxes, scores), dim=-1)
+        with torch.cuda.amp.autocast(enabled=self.fp16_inference):
+            loc, conf, landms = self.net(image)  # forward pass
+            scores = conf[:, :, 1:]
+            height, width = image.shape[2:]
+            priorbox = PriorBox(
+                self.cfg, image_size=(height, width))
+            priors = priorbox.forward()
+            priors = torch_utils.to_cuda(priors, self.device)
+            prior_data = priors.data
+            boxes = batched_decode(loc, prior_data, self.cfg['variance'])
+            boxes = torch.cat((boxes, scores), dim=-1)
         if return_landmarks:
             landms = decode_landm(landms, prior_data, self.cfg['variance'])
             return boxes, landms

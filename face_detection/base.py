@@ -22,7 +22,8 @@ class Detector(ABC):
             confidence_threshold: float,
             nms_iou_threshold: float,
             device: torch.device,
-            max_resolution: int):
+            max_resolution: int,
+            fp16_inference: bool):
         """
         Args:
             confidence_threshold (float): Threshold to filter out bounding boxes
@@ -34,6 +35,7 @@ class Detector(ABC):
         self.nms_iou_threshold = nms_iou_threshold
         self.device = device
         self.max_resolution = max_resolution
+        self.fp16_inference = fp16_inference
         self.mean = np.array(
             [123, 117, 104], dtype=np.float32).reshape(1, 1, 1, 3)
 
