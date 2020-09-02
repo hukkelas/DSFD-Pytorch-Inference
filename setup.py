@@ -18,6 +18,7 @@ setuptools.setup(
         "torch>=1.6",
         "torchvision>=0.3.0",
         "numpy",
+        "numba"
     ],
     packages=setuptools.find_packages()
 )
