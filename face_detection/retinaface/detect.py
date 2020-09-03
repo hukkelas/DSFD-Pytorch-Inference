@@ -43,6 +43,7 @@ class RetinaNetDetector(Detector):
         self.cfg = cfg
         self.net = net.to(self.device)
         self.mean = np.array([104, 117, 123], dtype=np.float32)
+        self.prior_box_cache = {}
 
     def batched_detect_with_landmarks(
             self, image: np.ndarray) -> typing.Tuple[np.ndarray, np.ndarray]:
@@ -106,9 +107,12 @@ class RetinaNetDetector(Detector):
             loc, conf, landms = self.net(image)  # forward pass
             scores = conf[:, :, 1:]
             height, width = image.shape[2:]
-            priorbox = PriorBox(
-                self.cfg, image_size=(height, width))
-            priors = priorbox.forward()
+            if image.shape[2:] in self.prior_box_cache:
+                priors = self.prior_box_cache[image.shape[2:]]
+            else:
+                priorbox = PriorBox(
+                    self.cfg, image_size=(height, width))
+                priors = priorbox.forward()
             priors = torch_utils.to_cuda(priors, self.device)
             prior_data = priors.data
             boxes = batched_decode(loc, prior_data, self.cfg['variance'])
