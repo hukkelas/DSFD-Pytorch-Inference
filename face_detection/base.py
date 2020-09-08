@@ -87,6 +87,18 @@ class Detector(ABC):
             final_output.append(output)
         return final_output
 
+    @torch.no_grad()
+    def resize(self, image, shrink: float):
+        if self.max_resolution is None and shrink == 1:
+            return image
+        height, width = image.shape[2:4]
+        shrink_factor = self.max_resolution / max((height, width))
+        if shrink_factor <= shrink:
+            shrink = shrink_factor
+        size = (int(height*shrink), int(width*shrink))
+        image = torch.nn.functional.interpolate(image, size=size)
+        return image
+
     def _pre_process(self, image: np.ndarray, shrink: float) -> torch.Tensor:
         """Takes N RGB image and performs and returns a set of bounding boxes as
             detections
@@ -100,11 +112,9 @@ class Detector(ABC):
         image = image.astype(np.float32) - self.mean
         image = np.moveaxis(image, -1, 1)
         image = torch.from_numpy(image)
-        if self.max_resolution is not None:
-            shrink_factor = self.max_resolution / max((height, width))
-            if shrink_factor <= shrink:
-                shrink = shrink_factor
-        image = torch.nn.functional.interpolate(image, scale_factor=shrink)
+        image = self.resize(image, shrink)
+        image = image.to(self.device)
+
         image = image.to(self.device)
         return image
 

@@ -57,8 +57,9 @@ class RetinaNetDetector(Detector):
         """
         image = image.astype(np.float32) - self.mean
         image = np.moveaxis(image, -1, 1)
-        image = torch.from_numpy(image).to(self.device)
-        height, width = image.shape[2:]
+        image = torch.from_numpy(image)
+        orig_shape = image.shape[2:]
+        image = self.resize(image, 1).to(self.device)
         boxes, landms = self._detect(image, return_landmarks=True)
         scores = boxes[:, :, -1]
         boxes = boxes[:, :, :-1]
@@ -80,6 +81,7 @@ class RetinaNetDetector(Detector):
             scores_ = scores_[keep_idx]
             landms_ = landms_[keep_idx]
             # Scale boxes
+            height, width = orig_shape
             boxes_[:, [0, 2]] *= width
             boxes_[:, [1, 3]] *= height
             # Scale landmarks
