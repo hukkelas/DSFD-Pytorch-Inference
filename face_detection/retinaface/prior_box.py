@@ -2,11 +2,9 @@
 # Original license: MIT
 import torch
 import numpy as np
-import numba
 from math import ceil
 
 
-@numba.jit(nopython=True)
 def generate_prior_box(feature_maps, image_size, steps, min_sizes):
     n_anchors = 0
     for x in feature_maps:
