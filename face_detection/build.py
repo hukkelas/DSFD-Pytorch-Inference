@@ -16,7 +16,8 @@ def build_detector(
         nms_iou_threshold: float = 0.3,
         device=get_device(),
         max_resolution: int = None,
-        fp16_inference: bool = False
+        fp16_inference: bool = False,
+        clip_boxes: bool = False
         ) -> Detector:
     assert name in available_detectors,\
         f"Detector not available. Chooce one of the following"+\
@@ -27,7 +28,8 @@ def build_detector(
         nms_iou_threshold=nms_iou_threshold,
         device=device,
         max_resolution=max_resolution,
-        fp16_inference=fp16_inference
+        fp16_inference=fp16_inference,
+        clip_boxes=clip_boxes
     )
     detector = build_from_cfg(args, DETECTOR_REGISTRY)
     return detector

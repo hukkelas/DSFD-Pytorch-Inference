@@ -82,8 +82,12 @@ class RetinaNetDetector(Detector):
             landms_ = landms_[keep_idx]
             # Scale boxes
             height, width = orig_shape
+            boxes_ = boxes_.cpu().numpy()
+            if self.clip_boxes:
+                boxes_ = boxes_.clip(0, 1)
             boxes_[:, [0, 2]] *= width
             boxes_[:, [1, 3]] *= height
+        
             # Scale landmarks
             landms_ = landms_.cpu().numpy().reshape(-1, 5, 2)
             landms_[:, :, 0] *= width

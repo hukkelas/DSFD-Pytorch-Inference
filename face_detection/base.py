@@ -23,19 +23,23 @@ class Detector(ABC):
             nms_iou_threshold: float,
             device: torch.device,
             max_resolution: int,
-            fp16_inference: bool):
+            fp16_inference: bool,
+            clip_boxes: bool):
         """
         Args:
             confidence_threshold (float): Threshold to filter out bounding boxes
             nms_iou_threshold (float): Intersection over union threshold for non-maxima threshold
             device ([type], optional): Defaults to cuda if cuda capable device is available.
             max_resolution (int, optional): Max image resolution to do inference to.
+            fp16_inference: To use torch autocast for fp16 inference or not
+            clip_boxes: To clip boxes within [0,1] to ensure no boxes are outside the image
         """
         self.confidence_threshold = confidence_threshold
         self.nms_iou_threshold = nms_iou_threshold
         self.device = device
         self.max_resolution = max_resolution
         self.fp16_inference = fp16_inference
+        self.clip_boxes = clip_boxes
         self.mean = np.array(
             [123, 117, 104], dtype=np.float32).reshape(1, 1, 1, 3)
 
@@ -121,6 +125,8 @@ class Detector(ABC):
     def _batched_detect(self, image: np.ndarray) -> typing.List[np.ndarray]:
         boxes = self._detect(image)
         boxes = self.filter_boxes(boxes)
+        if self.clip_boxes:
+            boxes = [box.clamp(0, 1) for box in boxes]
         return boxes
 
     @torch.no_grad()
