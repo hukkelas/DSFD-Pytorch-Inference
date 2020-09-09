@@ -118,6 +118,7 @@ class RetinaNetDetector(Detector):
                 priorbox = PriorBox(
                     self.cfg, image_size=(height, width))
                 priors = priorbox.forward()
+                self.prior_box_cache[image.shape[2:]] = priors
             priors = torch_utils.to_cuda(priors, self.device)
             prior_data = priors.data
             boxes = batched_decode(loc, prior_data, self.cfg['variance'])
