@@ -59,10 +59,10 @@ class SSH(nn.Module):
         self.conv7x7_3 = conv_bn_no_relu(
             out_channel//4, out_channel//4, stride=1)
 
-    def forward(self, input):
-        conv3X3 = self.conv3X3(input)
+    def forward(self, input_):
+        conv3X3 = self.conv3X3(input_)
 
-        conv5X5_1 = self.conv5X5_1(input)
+        conv5X5_1 = self.conv5X5_1(input_)
         conv5X5 = self.conv5X5_2(conv5X5_1)
 
         conv7X7_2 = self.conv7X7_2(conv5X5_1)
@@ -89,21 +89,18 @@ class FPN(nn.Module):
         self.merge1 = conv_bn(out_channels, out_channels, leaky=leaky)
         self.merge2 = conv_bn(out_channels, out_channels, leaky=leaky)
 
-    def forward(self, input):
-        # names = list(input.keys())
-        input = list(input.values())
-
-        output1 = self.output1(input[0])
-        output2 = self.output2(input[1])
-        output3 = self.output3(input[2])
-
+    def forward(self, input_):
+        input_ = list(input_.values())
+        output1 = self.output1(input_[0])
+        output2 = self.output2(input_[1])
+        output3 = self.output3(input_[2])
         up3 = F.interpolate(
-            output3, size=[output2.size(2), output2.size(3)], mode="nearest")
+            output3, size=[int(output2.size(2)), int(output2.size(3))], mode="nearest")
         output2 = output2 + up3
         output2 = self.merge2(output2)
 
         up2 = F.interpolate(
-            output2, size=[output1.size(2), output1.size(3)], mode="nearest")
+            output2, size=[int(output1.size(2)), int(output1.size(3))], mode="nearest")
         output1 = output1 + up2
         output1 = self.merge1(output1)
 
