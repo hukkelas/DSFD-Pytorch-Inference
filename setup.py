@@ -2,7 +2,7 @@ import setuptools
 
 setuptools.setup(
     name="face_detection",
-    version="0.1.4",
+    version="0.2.1",
     author="Håkon Hukkelås",
     description="A simple and lightweight package for state of the art face detection with GPU support.",
     long_description="".join(open("README.md", "r").readlines()),
@@ -18,7 +18,6 @@ setuptools.setup(
         "torch>=1.6",
         "torchvision>=0.3.0",
         "numpy",
-        "numba"
     ],
     packages=setuptools.find_packages()
 )
