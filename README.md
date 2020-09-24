@@ -100,6 +100,21 @@ This is **very roughly** estimated on a 1024x687 image. The reported time is the
 
 ## Changelog 
   - September 1st 2020: added support for fp16/mixed precision inference
+  - September 24th 2020: added support for TensorRT.
+
+
+## TensorRT Inference (Experimental)
+You can run RetinaFace ResNet-50 with TensorRT:
+
+```python
+from face_detection.retinaface.tensorrt_wrap import TensorRTRetinaFace
+
+inference_imshape =(480, 640) # Input to the CNN
+input_imshape = (1080, 1920) # Input for original video source
+detector = TensorRTRetinaFace(input_imshape, imshape)
+boxes, landmarks, scores = detector.infer(image)
+
+```
 
 ## Citation
 If you find this code useful, remember to cite the original authors:
