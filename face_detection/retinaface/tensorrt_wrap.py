@@ -4,22 +4,36 @@ import os
 import numpy as np
 import cv2
 import tensorrt as trt
-from face_detection.retinaface.detect import RetinaNetDetectorONNX
+import torch
+from .onnx import RetinaNetDetectorONNX
 from .utils import python_nms
+
+
+cache_dir = torch.hub._get_torch_home()
+os.makedirs(cache_dir, exist_ok=True)
 
 
 class TensorRTRetinaFace:
 
     def __init__(
             self,
-            imshape,  # (height, width)
-            onnx_filepath: str = "detector_net.onnx"):
+            input_imshape,
+            inference_imshape,
+            confidence_threshold: float = 0.5,
+            nms_threshold: float = 0.3):
+        self.inference_imshape = inference_imshape
+        self.input_imshape = input_imshape
+        self.confidence_threshold = confidence_threshold
+        self.nms_threshold = nms_threshold
+        identifier = "_".join(str(x) for x in list(input_imshape) + list(inference_imshape))
+        onnx_filepath = f"retinaface_input_{identifier}_.onnx"
+        onnx_filepath = os.path.join(cache_dir, onnx_filepath)
         if not os.path.isfile(onnx_filepath):
             detector = RetinaNetDetectorONNX(
-                imshape)
+                input_imshape, inference_imshape)
             detector.export_onnx(onnx_filepath)
         self.TRT_LOGGER = trt.Logger(trt.tensorrt.Logger.Severity.INFO)
-        self.engine_path = "model.engine"
+        self.engine_path = onnx_filepath.replace(".onnx", ".trt")
         self.engine = self.build_engine(onnx_filepath)
         self.context = self.engine.create_execution_context()
         self.initialize_bindings()
@@ -103,30 +117,37 @@ class TensorRTRetinaFace:
         out = out["host_output"]
         assert out.shape[1] == 15
         boxes = out[:, :4]
-        landms = out[:, 4:-1]
+        landms = out[:, 4:-1].reshape(-1, 5, 2)
         scores = out[:, -1]
+        keep_idx = scores >= self.confidence_threshold
+        boxes, landms, scores = [_[keep_idx] for _ in [boxes, landms, scores]]
+        boxes = boxes.clip(0, 1)
+        height, width = self.input_imshape
+        boxes[:, [0, 2]] *= width
+        boxes[:, [1, 3]] *= height
+        keep_idx = python_nms(boxes, self.nms_threshold)
+        boxes, landms, scores = [_[keep_idx] for _ in [boxes, landms, scores]]
+        landms = landms.reshape(-1, 5, 2)
+        landms[:, :, 0] *= width
+        landms[:, :, 1] *= height
         return boxes, landms, scores
 
     def infer(self, img):
-        confidence_t = np.array(0.3)
-        nms_t = np.array(0.3)
         img = np.rollaxis(img, axis=-1)[None].astype(np.float32)
         img = np.ascontiguousarray(img).astype(np.float32)
         boxes, landms, scores = self.run_engine(img)
-        keep_idx = scores >= confidence_t
-        boxes, landms, scores = [_[keep_idx] for _ in [boxes, landms, scores]]
-        keep_idx = python_nms(boxes, nms_t)
-        boxes, landms, scores = [_[keep_idx] for _ in [boxes, landms, scores]]
+
         return boxes, landms, scores
 
 
 if __name__ == "__main__":
-    image = cv2.imread("images/0_Parade_marchingband_1_765.jpg")
-    width = 640
-    height = 480
+    image = cv2.imread("images/0_Parade_Parade_0_873.jpg")
+    width = 1280
+    height = 720
     expected_imsize = (height, width)
     image = cv2.resize(image, (width, height))
     detector = TensorRTRetinaFace(
+        (height, width),
         (480, 640))
     print(detector.infer(image))
     boxes, landms, scores = detector.infer(image)
@@ -134,4 +155,6 @@ if __name__ == "__main__":
         print(boxes[i])
         x0, y0, x1, y1 = boxes[i].astype(int)
         image = cv2.rectangle(image, (x0, y0), (x1, y1),(255, 0, 0), 1 )
+        for kp in landms[i]:
+            image = cv2.circle(image, tuple(kp), 5, (255, 0, 0))
     cv2.imwrite("test.png", image)
