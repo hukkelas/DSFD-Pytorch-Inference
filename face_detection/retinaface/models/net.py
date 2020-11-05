@@ -6,6 +6,15 @@ import torch.nn.functional as F
 
 
 def conv_bn(inp, oup, stride=1, leaky=0):
+    """
+    Compute the convolution layer.
+
+    Args:
+        inp: (todo): write your description
+        oup: (array): write your description
+        stride: (int): write your description
+        leaky: (float): write your description
+    """
     return nn.Sequential(
         nn.Conv2d(inp, oup, 3, stride, 1, bias=False),
         nn.BatchNorm2d(oup),
@@ -14,6 +23,14 @@ def conv_bn(inp, oup, stride=1, leaky=0):
 
 
 def conv_bn_no_relu(inp, oup, stride=1):
+    """
+    Batch conv_bn_no_no ).
+
+    Args:
+        inp: (todo): write your description
+        oup: (todo): write your description
+        stride: (int): write your description
+    """
     return nn.Sequential(
         nn.Conv2d(inp, oup, 3, stride, 1, bias=False),
         nn.BatchNorm2d(oup),
@@ -21,6 +38,15 @@ def conv_bn_no_relu(inp, oup, stride=1):
 
 
 def conv_bn1X1(inp, oup, stride=1, leaky=0):
+    """
+    Computes the convolution layer.
+
+    Args:
+        inp: (todo): write your description
+        oup: (array): write your description
+        stride: (int): write your description
+        leaky: (float): write your description
+    """
     return nn.Sequential(
         nn.Conv2d(inp, oup, 1, stride, padding=0, bias=False),
         nn.BatchNorm2d(oup),
@@ -29,6 +55,15 @@ def conv_bn1X1(inp, oup, stride=1, leaky=0):
 
 
 def conv_dw(inp, oup, stride, leaky=0.1):
+    """
+    A convolution layer.
+
+    Args:
+        inp: (todo): write your description
+        oup: (array): write your description
+        stride: (int): write your description
+        leaky: (float): write your description
+    """
     return nn.Sequential(
         nn.Conv2d(inp, inp, 3, stride, 1, groups=inp, bias=False),
         nn.BatchNorm2d(inp),
@@ -42,6 +77,14 @@ def conv_dw(inp, oup, stride, leaky=0.1):
 
 class SSH(nn.Module):
     def __init__(self, in_channel, out_channel):
+        """
+        Initialize channel
+
+        Args:
+            self: (todo): write your description
+            in_channel: (int): write your description
+            out_channel: (str): write your description
+        """
         super().__init__()
         assert out_channel % 4 == 0
         leaky = 0
@@ -60,6 +103,13 @@ class SSH(nn.Module):
             out_channel//4, out_channel//4, stride=1)
 
     def forward(self, input_):
+        """
+        Perform forward computation.
+
+        Args:
+            self: (todo): write your description
+            input_: (todo): write your description
+        """
         conv3X3 = self.conv3X3(input_)
 
         conv5X5_1 = self.conv5X5_1(input_)
@@ -75,6 +125,14 @@ class SSH(nn.Module):
 
 class FPN(nn.Module):
     def __init__(self, in_channels_list, out_channels):
+        """
+        Initialize the channel.
+
+        Args:
+            self: (todo): write your description
+            in_channels_list: (list): write your description
+            out_channels: (int): write your description
+        """
         super().__init__()
         leaky = 0
         if (out_channels <= 64):
@@ -90,6 +148,13 @@ class FPN(nn.Module):
         self.merge2 = conv_bn(out_channels, out_channels, leaky=leaky)
 
     def forward(self, input_):
+        """
+        Merge forward computation.
+
+        Args:
+            self: (todo): write your description
+            input_: (todo): write your description
+        """
         input_ = list(input_.values())
         output1 = self.output1(input_[0])
         output2 = self.output2(input_[1])
@@ -110,6 +175,12 @@ class FPN(nn.Module):
 
 class MobileNetV1(nn.Module):
     def __init__(self):
+        """
+        Initialize the output.
+
+        Args:
+            self: (todo): write your description
+        """
         super(MobileNetV1, self).__init__()
         self.stage1 = nn.Sequential(
             conv_bn(3, 8, 2, leaky=0.1),    # 3
@@ -135,6 +206,13 @@ class MobileNetV1(nn.Module):
         self.fc = nn.Linear(256, 1000)
 
     def forward(self, x):
+        """
+        Forward computation.
+
+        Args:
+            self: (todo): write your description
+            x: (todo): write your description
+        """
         x = self.stage1(x)
         x = self.stage2(x)
         x = self.stage3(x)

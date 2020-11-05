@@ -15,6 +15,14 @@ from torch.hub import load_state_dict_from_url
 class RetinaNetDetectorONNX(torch.nn.Module):
 
     def __init__(self, input_imshape, inference_imshape):
+        """
+        Initialize the module.
+
+        Args:
+            self: (todo): write your description
+            input_imshape: (int): write your description
+            inference_imshape: (todo): write your description
+        """
         super().__init__()
         self.device = torch.device("cpu")
         cfg = cfg_re50
@@ -38,6 +46,13 @@ class RetinaNetDetectorONNX(torch.nn.Module):
         self.variance = torch.nn.Parameter(torch.tensor([0.1, 0.2])).float()
 
     def export_onnx(self, onnx_filepath):
+        """
+        Export onnx image.
+
+        Args:
+            self: (todo): write your description
+            onnx_filepath: (str): write your description
+        """
         try:
             image = cv2.imread("images/0_Parade_marchingband_1_765.jpg")
         except:

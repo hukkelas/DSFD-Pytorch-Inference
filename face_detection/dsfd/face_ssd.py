@@ -9,6 +9,13 @@ from ..box_utils import batched_decode
 class FEM(nn.Module):
 
     def __init__(self, channel_size):
+        """
+        Initialize kernel
+
+        Args:
+            self: (todo): write your description
+            channel_size: (int): write your description
+        """
         super(FEM, self).__init__()
         self.cs = channel_size
         self.cpm1 = nn.Conv2d(self.cs, 256, kernel_size=3, padding=1)
@@ -18,6 +25,13 @@ class FEM(nn.Module):
         self.cpm5 = nn.Conv2d(128, 128, kernel_size=3, padding=1)
 
     def forward(self, x):
+        """
+        Implement forward computation.
+
+        Args:
+            self: (todo): write your description
+            x: (todo): write your description
+        """
         x1_1 = self.cpm1(x).relu()
         x1_2 = self.cpm2(x).relu()
         x2_1 = self.cpm3(x1_2).relu()
@@ -45,6 +59,13 @@ class SSD(nn.Module):
     """
 
     def __init__(self, cfg):
+        """
+        Initialize the network.
+
+        Args:
+            self: (todo): write your description
+            cfg: (todo): write your description
+        """
         super(SSD, self).__init__()
         self.num_classes = 2 # Background and face
         self.cfg = cfg
@@ -107,6 +128,14 @@ class SSD(nn.Module):
         }
 
     def init_priors(self, feature_maps, image_size):
+        """
+        Initialize prior prior features.
+
+        Args:
+            self: (todo): write your description
+            feature_maps: (bool): write your description
+            image_size: (int): write your description
+        """
 
         # Hacky key system, but works....
         key = ".".join([str(item) for i in range(len(feature_maps)) for item in feature_maps[i]]) + \
@@ -205,6 +234,14 @@ class SSD(nn.Module):
         return output
 
     def mio_module(self, each_mmbox, len_conf):
+        """
+        Mio module.
+
+        Args:
+            self: (todo): write your description
+            each_mmbox: (todo): write your description
+            len_conf: (int): write your description
+        """
         chunk = torch.chunk(each_mmbox, each_mmbox.shape[1], 1)
         bmax = torch.max(torch.max(chunk[0], chunk[1]), chunk[2])
         if len_conf == 0:
@@ -242,6 +279,14 @@ class SSD(nn.Module):
 
 class DeepHeadModule(nn.Module):
     def __init__(self, input_channels, output_channels):
+        """
+        Initialize the network.
+
+        Args:
+            self: (todo): write your description
+            input_channels: (todo): write your description
+            output_channels: (todo): write your description
+        """
         super().__init__()
         self._input_channels = input_channels
         self._output_channels = output_channels
@@ -257,6 +302,13 @@ class DeepHeadModule(nn.Module):
             self._mid_channels, self._output_channels, kernel_size=1,)
 
     def forward(self, x):
+        """
+        Implement forward computation.
+
+        Args:
+            self: (todo): write your description
+            x: (todo): write your description
+        """
         out = self.conv1(x).relu()
         out = self.conv2(out).relu()
         out = self.conv3(out).relu()
@@ -265,6 +317,14 @@ class DeepHeadModule(nn.Module):
 
 
 def pa_multibox(output_channels, mbox_cfg, num_classes):
+    """
+    Paoxox with one - layer.
+
+    Args:
+        output_channels: (todo): write your description
+        mbox_cfg: (todo): write your description
+        num_classes: (int): write your description
+    """
     loc_layers = []
     conf_layers = []
     for k, v in enumerate(output_channels):

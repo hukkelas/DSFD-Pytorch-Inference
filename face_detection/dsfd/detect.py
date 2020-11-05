@@ -16,6 +16,12 @@ class DSFDDetector(Detector):
 
     def __init__(
             self, *args, **kwargs):
+        """
+        Initialize the device.
+
+        Args:
+            self: (todo): write your description
+        """
         super().__init__(*args, **kwargs)
         state_dict = load_state_dict_from_url(
             model_url,

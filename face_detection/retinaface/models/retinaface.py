@@ -8,6 +8,14 @@ from .net import MobileNetV1, SSH, FPN
 
 class ClassHead(nn.Module):
     def __init__(self, inchannels=512, num_anchors=3):
+        """
+        Initialize the graph.
+
+        Args:
+            self: (todo): write your description
+            inchannels: (int): write your description
+            num_anchors: (int): write your description
+        """
         super().__init__()
         self.num_anchors = num_anchors
         self.conv1x1 = nn.Conv2d(
@@ -15,6 +23,13 @@ class ClassHead(nn.Module):
             kernel_size=1)
 
     def forward(self, x):
+        """
+        Perform forward computation.
+
+        Args:
+            self: (todo): write your description
+            x: (todo): write your description
+        """
         out = self.conv1x1(x)
         out = out.permute(0, 2, 3, 1).contiguous()
 
@@ -23,12 +38,27 @@ class ClassHead(nn.Module):
 
 class BboxHead(nn.Module):
     def __init__(self, inchannels=512, num_anchors=3):
+        """
+        Initialize a set of layers.
+
+        Args:
+            self: (todo): write your description
+            inchannels: (int): write your description
+            num_anchors: (int): write your description
+        """
         super().__init__()
         self.conv1x1 = nn.Conv2d(
             inchannels, num_anchors*4,
             kernel_size=1)
 
     def forward(self, x):
+        """
+        Implement forward.
+
+        Args:
+            self: (todo): write your description
+            x: (todo): write your description
+        """
         out = self.conv1x1(x)
         out = out.permute(0, 2, 3, 1).contiguous()
 
@@ -37,11 +67,26 @@ class BboxHead(nn.Module):
 
 class LandmarkHead(nn.Module):
     def __init__(self, inchannels=512, num_anchors=3):
+        """
+        Initialize the network.
+
+        Args:
+            self: (todo): write your description
+            inchannels: (int): write your description
+            num_anchors: (int): write your description
+        """
         super().__init__()
         self.conv1x1 = nn.Conv2d(
             inchannels, num_anchors*10, kernel_size=1)
 
     def forward(self, x):
+        """
+        Implement forward.
+
+        Args:
+            self: (todo): write your description
+            x: (todo): write your description
+        """
         out = self.conv1x1(x)
         out = out.permute(0, 2, 3, 1).contiguous()
 
@@ -80,24 +125,58 @@ class RetinaFace(nn.Module):
         self.LandmarkHead = self._make_landmark_head(fpn_num=3, inchannels=cfg['out_channel'])
 
     def _make_class_head(self, fpn_num=3, inchannels=64, anchor_num=2):
+        """
+        Make a list of classhead classes.
+
+        Args:
+            self: (todo): write your description
+            fpn_num: (int): write your description
+            inchannels: (todo): write your description
+            anchor_num: (int): write your description
+        """
         classhead = nn.ModuleList()
         for i in range(fpn_num):
             classhead.append(ClassHead(inchannels, anchor_num))
         return classhead
     
     def _make_bbox_head(self, fpn_num=3, inchannels=64, anchor_num=2):
+        """
+        Create a list of bounding boxes.
+
+        Args:
+            self: (todo): write your description
+            fpn_num: (int): write your description
+            inchannels: (int): write your description
+            anchor_num: (int): write your description
+        """
         bboxhead = nn.ModuleList()
         for i in range(fpn_num):
             bboxhead.append(BboxHead(inchannels, anchor_num))
         return bboxhead
 
     def _make_landmark_head(self, fpn_num=3, inchannels=64, anchor_num=2):
+        """
+        Create a fpnmarkhead head.
+
+        Args:
+            self: (todo): write your description
+            fpn_num: (int): write your description
+            inchannels: (int): write your description
+            anchor_num: (int): write your description
+        """
         landmarkhead = nn.ModuleList()
         for i in range(fpn_num):
             landmarkhead.append(LandmarkHead(inchannels, anchor_num))
         return landmarkhead
 
     def forward(self, inputs):
+        """
+        Generate forward computation.
+
+        Args:
+            self: (todo): write your description
+            inputs: (todo): write your description
+        """
         out = self.body(inputs)
 
         # FPN

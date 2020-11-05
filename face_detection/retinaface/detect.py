@@ -22,6 +22,13 @@ class RetinaNetDetector(Detector):
             model: str,
             *args,
             **kwargs):
+        """
+        Initialize the module.
+
+        Args:
+            self: (todo): write your description
+            model: (todo): write your description
+        """
         super().__init__(*args, **kwargs)
         if model == "mobilenet":
             cfg = cfg_mnet
@@ -133,6 +140,12 @@ class RetinaNetDetector(Detector):
 class RetinaNetResNet50(RetinaNetDetector):
 
     def __init__(self, *args, **kwargs):
+        """
+        Initialize the init.
+
+        Args:
+            self: (todo): write your description
+        """
         super().__init__("resnet50", *args, **kwargs)
 
 
@@ -140,4 +153,10 @@ class RetinaNetResNet50(RetinaNetDetector):
 class RetinaNetMobileNetV1(RetinaNetDetector):
 
     def __init__(self, *args, **kwargs):
+        """
+        Initialize the init.
+
+        Args:
+            self: (todo): write your description
+        """
         super().__init__("mobilenet", *args, **kwargs)

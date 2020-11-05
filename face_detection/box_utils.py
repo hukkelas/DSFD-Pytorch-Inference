@@ -25,6 +25,13 @@ def batched_decode(loc, priors, variances, to_XYXY=True):
 
 
 def scale_boxes(imshape, boxes):
+    """
+    Return a new boxes. imshape.
+
+    Args:
+        imshape: (int): write your description
+        boxes: (list): write your description
+    """
     height, width = imshape
     boxes[:, [0, 2]] *= width
     boxes[:, [1, 3]] *= height
