@@ -7,6 +7,14 @@ from .box_utils import scale_boxes
 
 
 def check_image(im: np.ndarray):
+    """
+    Check if an image is a numpy array.
+
+    Args:
+        im: (array): write your description
+        np: (array): write your description
+        ndarray: (array): write your description
+    """
     assert im.dtype == np.uint8,\
         f"Expect image to have dtype np.uint8. Was: {im.dtype}"
     assert len(im.shape) == 4,\
@@ -93,6 +101,14 @@ class Detector(ABC):
 
     @torch.no_grad()
     def resize(self, image, shrink: float):
+        """
+        Resize an image.
+
+        Args:
+            self: (todo): write your description
+            image: (array): write your description
+            shrink: (str): write your description
+        """
         if self.max_resolution is None and shrink == 1:
             return image
         height, width = image.shape[2:4]
@@ -123,6 +139,15 @@ class Detector(ABC):
         return image
 
     def _batched_detect(self, image: np.ndarray) -> typing.List[np.ndarray]:
+        """
+        Find all boxes in an image.
+
+        Args:
+            self: (todo): write your description
+            image: (array): write your description
+            np: (todo): write your description
+            ndarray: (array): write your description
+        """
         boxes = self._detect(image)
         boxes = self.filter_boxes(boxes)
         if self.clip_boxes:
@@ -149,6 +174,17 @@ class Detector(ABC):
         return boxes
 
     def validate_detections(self, boxes: typing.List[np.ndarray]):
+        """
+        Validate all boxes.
+
+        Args:
+            self: (todo): write your description
+            boxes: (list): write your description
+            typing: (str): write your description
+            List: (todo): write your description
+            np: (todo): write your description
+            ndarray: (array): write your description
+        """
         for box in boxes:
             assert np.all(box[:, 4] <= 1) and np.all(box[:, 4] >= 0),\
                 f"Confidence values not valid: {box}"

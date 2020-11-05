@@ -6,6 +6,13 @@ import face_detection
 
 
 def draw_faces(im, bboxes):
+    """
+    Draws the bounding boxes on the image.
+
+    Args:
+        im: (int): write your description
+        bboxes: (todo): write your description
+    """
     for bbox in bboxes:
         x0, y0, x1, y1 = [int(_) for _ in bbox]
         cv2.rectangle(im, (x0, y0), (x1, y1), (0, 0, 255), 2)

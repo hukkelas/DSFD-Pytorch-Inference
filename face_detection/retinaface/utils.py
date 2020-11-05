@@ -28,6 +28,13 @@ def decode_landm(pre, priors, variances):
 
 #  Malisiewicz et al.
 def python_nms(boxes, overlapThresh):
+    """
+    Finds the nms that overlap.
+
+    Args:
+        boxes: (array): write your description
+        overlapThresh: (bool): write your description
+    """
     # if there are no boxes, return an empty list
     if len(boxes) == 0:
         return []

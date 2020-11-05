@@ -7,6 +7,15 @@ class PriorBox(object):
     feature map.
     """
     def __init__(self, cfg, image_size, feature_maps):
+        """
+        Initialize image variables.
+
+        Args:
+            self: (todo): write your description
+            cfg: (todo): write your description
+            image_size: (int): write your description
+            feature_maps: (str): write your description
+        """
         super(PriorBox, self).__init__()
         self.image_size = image_size
         self.feature_maps = feature_maps
@@ -24,6 +33,12 @@ class PriorBox(object):
                 raise ValueError('Variances must be greater than 0')
 
     def forward(self):
+        """
+        Calculate the image
+
+        Args:
+            self: (todo): write your description
+        """
         mean = []
 
         if len(self.min_sizes) == 5:

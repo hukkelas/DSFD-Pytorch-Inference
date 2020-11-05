@@ -19,6 +19,19 @@ def build_detector(
         fp16_inference: bool = False,
         clip_boxes: bool = False
         ) -> Detector:
+    """
+    Builds a detector.
+
+    Args:
+        name: (str): write your description
+        confidence_threshold: (str): write your description
+        nms_iou_threshold: (todo): write your description
+        device: (array): write your description
+        get_device: (todo): write your description
+        max_resolution: (int): write your description
+        fp16_inference: (todo): write your description
+        clip_boxes: (todo): write your description
+    """
     assert name in available_detectors,\
         f"Detector not available. Chooce one of the following"+\
         ",".join(available_detectors)

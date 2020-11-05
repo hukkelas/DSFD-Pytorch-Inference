@@ -21,6 +21,16 @@ class TensorRTRetinaFace:
             inference_imshape,
             confidence_threshold: float = 0.5,
             nms_threshold: float = 0.3):
+        """
+        Initialize the engine.
+
+        Args:
+            self: (todo): write your description
+            input_imshape: (int): write your description
+            inference_imshape: (todo): write your description
+            confidence_threshold: (float): write your description
+            nms_threshold: (float): write your description
+        """
         self.inference_imshape = inference_imshape
         self.input_imshape = input_imshape
         self.confidence_threshold = confidence_threshold
@@ -39,6 +49,12 @@ class TensorRTRetinaFace:
         self.initialize_bindings()
 
     def initialize_bindings(self):
+        """
+        Initialize bindings.
+
+        Args:
+            self: (todo): write your description
+        """
         self.input_bindings = []
         self.output_bindings = []
         for idx in range(self.engine.num_bindings):
@@ -66,6 +82,13 @@ class TensorRTRetinaFace:
                 })
 
     def build_engine(self, onnx_filepath: str):
+        """
+        Builds the engine engine.
+
+        Args:
+            self: (todo): write your description
+            onnx_filepath: (str): write your description
+        """
         if os.path.isfile(self.engine_path):
             with open(self.engine_path, "rb") as f, trt.Runtime(self.TRT_LOGGER) as runtime:
                 engine = runtime.deserialize_cuda_engine(f.read())
@@ -100,6 +123,13 @@ class TensorRTRetinaFace:
         return engine
 
     def run_engine(self, img):
+        """
+        Run the engine.
+
+        Args:
+            self: (todo): write your description
+            img: (array): write your description
+        """
         stream = cuda.Stream()
         cuda.memcpy_htod_async(
             self.input_bindings[0]["device_input"], img, stream)
@@ -133,6 +163,13 @@ class TensorRTRetinaFace:
         return boxes, landms, scores
 
     def infer(self, img):
+        """
+        Infer the cross - place image.
+
+        Args:
+            self: (todo): write your description
+            img: (array): write your description
+        """
         img = np.rollaxis(img, axis=-1)[None].astype(np.float32)
         img = np.ascontiguousarray(img).astype(np.float32)
         boxes, landms, scores = self.run_engine(img)

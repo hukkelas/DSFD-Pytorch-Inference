@@ -6,6 +6,15 @@ from math import ceil
 
 
 def generate_prior_box(feature_maps, image_size, steps, min_sizes):
+    """
+    Generate prior coordinates of the image.
+
+    Args:
+        feature_maps: (str): write your description
+        image_size: (int): write your description
+        steps: (int): write your description
+        min_sizes: (int): write your description
+    """
     n_anchors = 0
     for x in feature_maps:
         n_anchors += x[0] * x[1] * len(min_sizes[0])
@@ -31,6 +40,15 @@ def generate_prior_box(feature_maps, image_size, steps, min_sizes):
 
 class PriorBox(object):
     def __init__(self, cfg, image_size=None, phase='train'):
+        """
+        Initialize the image.
+
+        Args:
+            self: (todo): write your description
+            cfg: (todo): write your description
+            image_size: (int): write your description
+            phase: (float): write your description
+        """
         super(PriorBox, self).__init__()
         self.min_sizes =  np.array(cfg['min_sizes']).astype(np.int16)
         self.steps = np.array(cfg['steps']).astype(np.int16)
@@ -40,6 +58,12 @@ class PriorBox(object):
         self.name = "s"
 
     def forward(self):
+        """
+        Generate prior
+
+        Args:
+            self: (todo): write your description
+        """
         anchors = generate_prior_box(
             self.feature_maps, self.image_size, self.steps, self.min_sizes
         )

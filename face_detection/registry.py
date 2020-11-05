@@ -4,23 +4,55 @@ from functools import partial
 class Registry(object):
 
     def __init__(self, name):
+        """
+        Initialize a module.
+
+        Args:
+            self: (todo): write your description
+            name: (str): write your description
+        """
         self._name = name
         self._module_dict = dict()
 
     def __repr__(self):
+        """
+        Return a repr representation of this object.
+
+        Args:
+            self: (todo): write your description
+        """
         format_str = self.__class__.__name__ + '(name={}, items={})'.format(
             self._name, list(self._module_dict.keys()))
         return format_str
 
     @property
     def name(self):
+        """
+        The name of the name
+
+        Args:
+            self: (todo): write your description
+        """
         return self._name
 
     @property
     def module_dict(self):
+        """
+        Returns a dictionary of all the module names.
+
+        Args:
+            self: (todo): write your description
+        """
         return self._module_dict
 
     def get(self, key):
+        """
+        Retrieves the value of a key.
+
+        Args:
+            self: (todo): write your description
+            key: (todo): write your description
+        """
         obj = self._module_dict.get(key, None)
         if obj is None:
             raise KeyError(
@@ -42,6 +74,14 @@ class Registry(object):
         self._module_dict[module_name] = module_class
 
     def register_module(self, cls=None, force=False):
+        """
+        Registers a module.
+
+        Args:
+            self: (todo): write your description
+            cls: (todo): write your description
+            force: (bool): write your description
+        """
         if cls is None:
             return partial(self.register_module, force=force)
         self._register_module(cls, force=force)
