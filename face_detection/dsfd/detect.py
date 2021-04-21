@@ -8,7 +8,7 @@ from torch.hub import load_state_dict_from_url
 from ..base import Detector
 from ..build import DETECTOR_REGISTRY
 
-model_url = "http://folk.ntnu.no/haakohu/WIDERFace_DSFD_RES152.pth"
+model_url = "https://folk.ntnu.no/haakohu/WIDERFace_DSFD_RES152.pth"
 
 
 @DETECTOR_REGISTRY.register_module
