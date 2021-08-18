@@ -19,7 +19,7 @@ class DSFDDetector(Detector):
         super().__init__(*args, **kwargs)
         state_dict = load_state_dict_from_url(
             model_url,
-            map_location=torch_utils.get_device(),
+            map_location=self.device,
             progress=True)
         self.net = SSD(resnet152_model_config)
         self.net.load_state_dict(state_dict)
