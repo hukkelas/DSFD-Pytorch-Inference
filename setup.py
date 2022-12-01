@@ -22,8 +22,6 @@ setuptools.setup(
         "Operating System :: OS Independent",
     ],
     install_requires=[
-        "torch>=1.6",
-        "torchvision>=0.3.0",
         "numpy",
     ],
     packages=setuptools.find_packages()
