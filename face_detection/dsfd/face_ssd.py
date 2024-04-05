@@ -2,8 +2,8 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torchvision
-from .utils import PriorBox
-from ..box_utils import batched_decode
+from face_detection.dsfd.utils import PriorBox
+from face_detection.box_utils import batched_decode
 
 
 class FEM(nn.Module):

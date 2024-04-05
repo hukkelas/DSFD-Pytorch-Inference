@@ -1,18 +1,19 @@
 # Adapted from https://github.com/biubug6/Pytorch_Retinaface
 # Original license: MIT
-import torch
 import numpy as np
-from .. import torch_utils
 import typing
-from .models.retinaface import RetinaFace
-from ..box_utils import batched_decode
-from .utils import decode_landm
-from .config import cfg_mnet, cfg_re50
-from .prior_box import PriorBox
-from torch.hub import load_state_dict_from_url
+
+import torch
 from torchvision.ops import nms
-from ..base import Detector
-from ..build import DETECTOR_REGISTRY
+
+from face_detection import torch_utils
+from face_detection.base import Detector
+from face_detection.build import DETECTOR_REGISTRY
+from face_detection.box_utils import batched_decode
+from face_detection.retinaface.models.retinaface import RetinaFace
+from face_detection.retinaface.utils import decode_landm
+from face_detection.retinaface.config import cfg_mnet, cfg_re50
+from face_detection.retinaface.prior_box import PriorBox
 
 
 class RetinaNetDetector(Detector):
@@ -23,20 +24,14 @@ class RetinaNetDetector(Detector):
             *args,
             **kwargs):
         super().__init__(*args, **kwargs)
+        
         if model == "mobilenet":
             cfg = cfg_mnet
-            state_dict = load_state_dict_from_url(
-                "https://raw.githubusercontent.com/hukkelas/DSFD-Pytorch-Inference/master/RetinaFace_mobilenet025.pth",
-                map_location=torch_utils.get_device()
-            )
         else:
             assert model == "resnet50"
             cfg = cfg_re50
-            state_dict = load_state_dict_from_url(
-                "https://api.loke.aws.unit.no/dlr-gui-backend-resources-content/v2/contents/links/8dd81669-eb84-4520-8173-dbe49d72f44cb2eef6da-3983-4a12-9085-d11555b93842c19bdf27-b924-4214-9381-e6cac30b87cf",
-                map_location=torch_utils.get_device()
-            )
-            state_dict = {k.replace("module.", ""): v for k, v in state_dict.items()}
+
+        state_dict = torch_utils.load_weights(self.model_weights)
         net = RetinaFace(cfg=cfg)
         net.eval()
         net.load_state_dict(state_dict)
@@ -119,7 +114,7 @@ class RetinaNetDetector(Detector):
                     self.cfg, image_size=(height, width))
                 priors = priorbox.forward()
                 self.prior_box_cache[image.shape[2:]] = priors
-            priors = torch_utils.to_cuda(priors, self.device)
+            priors = priors.to(self.device)
             prior_data = priors.data
             boxes = batched_decode(loc, prior_data, self.cfg['variance'])
             boxes = torch.cat((boxes, scores), dim=-1)

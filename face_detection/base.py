@@ -3,7 +3,8 @@ import torch
 import typing
 from abc import ABC, abstractmethod
 from torchvision.ops import nms
-from .box_utils import scale_boxes
+
+from face_detection.box_utils import scale_boxes
 
 
 def check_image(im: np.ndarray):
@@ -24,7 +25,9 @@ class Detector(ABC):
             device: torch.device,
             max_resolution: int,
             fp16_inference: bool,
-            clip_boxes: bool):
+            clip_boxes: bool,
+            model_weights: str,
+            ):
         """
         Args:
             confidence_threshold (float): Threshold to filter out bounding boxes
@@ -36,10 +39,11 @@ class Detector(ABC):
         """
         self.confidence_threshold = confidence_threshold
         self.nms_iou_threshold = nms_iou_threshold
-        self.device = device
+        self.device = torch.device(device)
         self.max_resolution = max_resolution
         self.fp16_inference = fp16_inference
         self.clip_boxes = clip_boxes
+        self.model_weights = model_weights
         self.mean = np.array(
             [123, 117, 104], dtype=np.float32).reshape(1, 1, 1, 3)
 

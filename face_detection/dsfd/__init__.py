@@ -1,1 +1,1 @@
-from .detect import DSFDDetector
+from face_detection.dsfd.detect import DSFDDetector

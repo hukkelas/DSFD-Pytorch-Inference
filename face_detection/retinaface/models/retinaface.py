@@ -3,7 +3,8 @@
 import torch
 import torch.nn as nn
 import torchvision.models._utils as _utils
-from .net import MobileNetV1, SSH, FPN
+
+from face_detection.retinaface.models.net import MobileNetV1, SSH, FPN
 
 
 class ClassHead(nn.Module):

@@ -1,3 +1,3 @@
-from .build import build_detector, available_detectors
-from .dsfd import DSFDDetector
-from .retinaface import RetinaNetMobileNetV1, RetinaNetResNet50
+from face_detection.build import build_detector, available_detectors
+from face_detection.dsfd import DSFDDetector
+from face_detection.retinaface import RetinaNetMobileNetV1, RetinaNetResNet50

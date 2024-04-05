@@ -22,7 +22,20 @@ You can also install with the `setup.py`
 python3 setup.py install
 ```
 
+## Model weights
+
+In this table you can see the urls for the different models implemented. We recommend to download them to local before do an inference:
+
+|Model|Weights url|
+|:-:|:-:|
+|RetinaNetMobileNetV1|[Link](https://raw.githubusercontent.com/hukkelas/DSFD-Pytorch-Inference/master/RetinaFace_mobilenet025.pth)|
+|RetinaNetResNet50|[Link](https://api.loke.aws.unit.no/dlr-gui-backend-resources-content/v2/contents/links/8dd81669-eb84-4520-8173-dbe49d72f44cb2eef6da-3983-4a12-9085-d11555b93842c19bdf27-b924-4214-9381-e6cac30b87cf)|
+|DSFDDetector|[Link 1](https://api.loke.aws.unit.no/dlr-gui-backend-resources-content/v2/contents/links/61be4ec7-8c11-4a4a-a9f4-827144e4ab4f0c2764c1-80a0-4083-bbfa-68419f889b80e4692358-979b-458e-97da-c1a1660b3314) - [Link 2](https://drive.google.com/uc?id=1WeXlNYsM6dMP3xQQELI-4gxhwKUQxc3-&export=download)|
+
+
+
 ## Getting started
+
 Run
 ```
 python3 test.py
@@ -95,8 +108,6 @@ This is **very roughly** estimated on a 1024x687 image. The reported time is the
 | NVIDIA T4 16 GB | 482 ms (2.1 FPS) | 181ms (5.5 FPS) | 178ms (5.6 FPS) |
 
 *Done over 100 forward passes on a MacOS Mid 2014, 15-Inch.
-
-
 
 ## Changelog 
   - September 1st 2020: added support for fp16/mixed precision inference

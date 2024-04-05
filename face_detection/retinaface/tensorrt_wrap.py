@@ -5,8 +5,9 @@ import numpy as np
 import cv2
 import tensorrt as trt
 import torch
-from .onnx import RetinaNetDetectorONNX
-from .utils import python_nms
+
+from face_detection.retinaface.onnx import RetinaNetDetectorONNX
+from face_detection.retinaface.utils import python_nms
 
 
 cache_dir = torch.hub._get_torch_home()
