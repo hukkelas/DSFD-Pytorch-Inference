@@ -1,15 +1,16 @@
 # Adapted from https://github.com/biubug6/Pytorch_Retinaface
 # Original license: MIT
-import torch
 import cv2
 import numpy as np
-from .. import torch_utils
-from .models.retinaface import RetinaFace
-from ..box_utils import batched_decode
-from .utils import decode_landm
-from .config import cfg_re50
-from .prior_box import PriorBox
+
+import torch
 from torch.hub import load_state_dict_from_url
+
+from face_detection.retinaface.models.retinaface import RetinaFace
+from face_detection.box_utils import batched_decode
+from face_detection.retinaface.utils import decode_landm
+from face_detection.retinaface.config import cfg_re50
+from face_detection.retinaface.prior_box import PriorBox
 
 
 class RetinaNetDetectorONNX(torch.nn.Module):
@@ -20,7 +21,7 @@ class RetinaNetDetectorONNX(torch.nn.Module):
         cfg = cfg_re50
         state_dict = load_state_dict_from_url(
             "https://folk.ntnu.no/haakohu/RetinaFace_ResNet50.pth",
-            map_location=torch_utils.get_device()
+            map_location="cpu"
         )
         state_dict = {k.replace("module.", ""): v for k, v in state_dict.items()}
         net = RetinaFace(cfg=cfg)

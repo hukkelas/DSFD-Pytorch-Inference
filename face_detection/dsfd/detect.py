@@ -1,14 +1,12 @@
 import torch
 import numpy as np
 import typing
-from .face_ssd import SSD
-from .config import resnet152_model_config
-from .. import torch_utils
-from torch.hub import load_state_dict_from_url
-from ..base import Detector
-from ..build import DETECTOR_REGISTRY
 
-model_url = "https://api.loke.aws.unit.no/dlr-gui-backend-resources-content/v2/contents/links/61be4ec7-8c11-4a4a-a9f4-827144e4ab4f0c2764c1-80a0-4083-bbfa-68419f889b80e4692358-979b-458e-97da-c1a1660b3314"
+from face_detection import torch_utils
+from face_detection.dsfd.face_ssd import SSD
+from face_detection.dsfd.config import resnet152_model_config
+from face_detection.base import Detector
+from face_detection.build import DETECTOR_REGISTRY
 
 
 @DETECTOR_REGISTRY.register_module
@@ -17,10 +15,8 @@ class DSFDDetector(Detector):
     def __init__(
             self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        state_dict = load_state_dict_from_url(
-            model_url,
-            map_location=self.device,
-            progress=True)
+
+        state_dict = torch_utils.load_weights(self.model_weights)
         self.net = SSD(resnet152_model_config)
         self.net.load_state_dict(state_dict)
         self.net.eval()

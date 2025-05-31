@@ -1,6 +1,8 @@
-from .registry import build_from_cfg, Registry
-from .base import Detector
-from .torch_utils import get_device
+from typing import Optional
+
+from face_detection.registry import build_from_cfg, Registry
+from face_detection.base import Detector
+
 
 available_detectors = [
     "DSFDDetector",
@@ -14,14 +16,17 @@ def build_detector(
         name: str = "DSFDDetector",
         confidence_threshold: float = 0.5,
         nms_iou_threshold: float = 0.3,
-        device=get_device(),
+        device: str = "cpu",
         max_resolution: int = None,
         fp16_inference: bool = False,
-        clip_boxes: bool = False
+        clip_boxes: bool = False,
+        model_weights: Optional[str] = None,
         ) -> Detector:
     assert name in available_detectors,\
-        f"Detector not available. Chooce one of the following"+\
-        ",".join(available_detectors)
+        f"""Detector not available. 
+        Choose one of the following {','.join(available_detectors)}
+        """
+        
     args = dict(
         type=name,
         confidence_threshold=confidence_threshold,
@@ -29,7 +34,8 @@ def build_detector(
         device=device,
         max_resolution=max_resolution,
         fp16_inference=fp16_inference,
-        clip_boxes=clip_boxes
+        clip_boxes=clip_boxes,
+        model_weights=model_weights,
     )
     detector = build_from_cfg(args, DETECTOR_REGISTRY)
     return detector
