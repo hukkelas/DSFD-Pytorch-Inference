@@ -1,7 +1,7 @@
 name: Format
 on: [push]
 jobs:
-  format:
+  ruff:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
@@ -10,5 +10,5 @@ jobs:
         uses: ./.github/actions/setup-uv
 
       - name: Build
-        run: uv build
+        run: uv run ruff check 
 
