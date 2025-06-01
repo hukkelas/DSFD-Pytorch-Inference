@@ -1,0 +1,12 @@
+name: Setup UV
+description: Installs UV from Astral.sh
+runs:
+  using: "composite"
+  steps:
+    - name: Install curl and UV
+      shell: bash
+      run: |
+        sudo apt update
+        sudo apt install -y curl
+        curl -LsSf https://astral.sh/uv/install.sh | sh
+        echo "$HOME/.local/bin" >> $GITHUB_PATH
