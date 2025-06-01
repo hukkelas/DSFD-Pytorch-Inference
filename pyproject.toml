@@ -9,8 +9,9 @@ classifiers=[
     "Operating System :: OS Independent",
 ]
 dependencies = [
-    "numpy>=2.0.2",
-    "torch>=2.7.0",
+    "numpy",
+    "torch",
+    "torchvision",
 ]
 
 [build-system]
@@ -18,3 +19,9 @@ requires = ["setuptools", "torch"]
 
 [tool.setuptools]
 packages = ["face_detection"]
+
+[dependency-groups]
+dev = [
+    "opencv-python",
+    "pytest>=8.3.5",
+]

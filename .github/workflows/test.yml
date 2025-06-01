@@ -1,7 +1,7 @@
-name: Format
+name: Test
 on: [push]
 jobs:
-  format:
+  pytest:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
@@ -9,6 +9,6 @@ jobs:
       - name: Setup UV
         uses: ./.github/actions/setup-uv
 
-      - name: Build
-        run: uv build
+      - name: test
+        run: uv run pytest
 
