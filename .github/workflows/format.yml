@@ -1,0 +1,14 @@
+name: Format
+on: [push]
+jobs:
+  my-job:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup UV
+        uses: ./.github/actions/setup-uv
+
+      - name: Build
+        run: uv build
+

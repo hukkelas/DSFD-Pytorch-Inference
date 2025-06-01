@@ -1,0 +1,20 @@
+[project]
+name="face_detection"
+version="0.2.1"
+description="A simple and lightweight package for state of the art face detection with GPU support."
+readme="README.md"
+requires-python=">=3.9"
+license="apache-2.0"
+classifiers=[
+    "Operating System :: OS Independent",
+]
+dependencies = [
+    "numpy>=2.0.2",
+    "torch>=2.7.0",
+]
+
+[build-system]
+requires = ["setuptools", "torch"]
+
+[tool.setuptools]
+packages = ["face_detection"]
