@@ -116,6 +116,13 @@ boxes, landmarks, scores = detector.infer(image)
 
 ```
 
+## Formatting
+ALl code should be formatted with ruff:
+```
+uv run ruff format
+uv run ruff check
+```
+
 ## Citation
 If you find this code useful, remember to cite the original authors:
 ```
