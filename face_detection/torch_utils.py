@@ -4,7 +4,7 @@ import torch
 
 def to_cuda(elements, device):
     if torch.cuda.is_available():
-        if type(elements) == tuple or type(elements) == list:
+        if isinstance(elements, tuple) or isinstance(elements, list):
             return [x.to(device) for x in elements]
         return elements.to(device)
     return elements

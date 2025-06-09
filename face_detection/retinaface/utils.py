@@ -17,12 +17,16 @@ def decode_landm(pre, priors, variances):
         decoded landm predictions
     """
     priors = priors[None]
-    landms = torch.cat((priors[:, :, :2] + pre[:, :, :2] * variances[0] * priors[:, :, 2:],
-                        priors[:, :, :2] + pre[:, :, 2:4] * variances[0] * priors[:, :, 2:],
-                        priors[:, :, :2] + pre[:, :, 4:6] * variances[0] * priors[:, :, 2:],
-                        priors[:, :, :2] + pre[:, :, 6:8] * variances[0] * priors[:, :, 2:],
-                        priors[:, :, :2] + pre[:, :, 8:10] * variances[0] * priors[:, :, 2:],
-                        ), dim=2)
+    landms = torch.cat(
+        (
+            priors[:, :, :2] + pre[:, :, :2] * variances[0] * priors[:, :, 2:],
+            priors[:, :, :2] + pre[:, :, 2:4] * variances[0] * priors[:, :, 2:],
+            priors[:, :, :2] + pre[:, :, 4:6] * variances[0] * priors[:, :, 2:],
+            priors[:, :, :2] + pre[:, :, 6:8] * variances[0] * priors[:, :, 2:],
+            priors[:, :, :2] + pre[:, :, 8:10] * variances[0] * priors[:, :, 2:],
+        ),
+        dim=2,
+    )
     return landms
 
 
@@ -34,13 +38,13 @@ def python_nms(boxes, overlapThresh):
     boxes = boxes.astype(np.float32)
     if boxes.dtype.kind == "i":
         boxes = boxes.astype("float")
-    # initialize the list of picked indexes	
+    # initialize the list of picked indexes
     keep_idx = []
     # grab the coordinates of the bounding boxes
-    x1 = boxes[:,0]
-    y1 = boxes[:,1]
-    x2 = boxes[:,2]
-    y2 = boxes[:,3]
+    x1 = boxes[:, 0]
+    y1 = boxes[:, 1]
+    x2 = boxes[:, 2]
+    y2 = boxes[:, 3]
     area = (x2 - x1 + 1) * (y2 - y1 + 1)
     idxs = np.argsort(y2)
     # keep looping while some indexes still remain in the indexes
@@ -64,6 +68,7 @@ def python_nms(boxes, overlapThresh):
         # compute the ratio of overlap
         overlap = (w * h) / area[idxs[:last]]
         # delete all indexes from the index list that have
-        idxs = np.delete(idxs, np.concatenate(([last],
-            np.where(overlap > overlapThresh)[0])))
+        idxs = np.delete(
+            idxs, np.concatenate(([last], np.where(overlap > overlapThresh)[0]))
+        )
     return keep_idx

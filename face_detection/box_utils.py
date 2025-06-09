@@ -14,10 +14,13 @@ def batched_decode(loc, priors, variances, to_XYXY=True):
         decoded bounding box predictions
     """
     priors = priors[None]
-    boxes = torch.cat((
-        priors[:, :, :2] + loc[:, :, :2] * variances[0] * priors[:, :,  2:],
-        priors[:, :, 2:] * torch.exp(loc[:, :, 2:] * variances[1])),
-        dim=2)
+    boxes = torch.cat(
+        (
+            priors[:, :, :2] + loc[:, :, :2] * variances[0] * priors[:, :, 2:],
+            priors[:, :, 2:] * torch.exp(loc[:, :, 2:] * variances[1]),
+        ),
+        dim=2,
+    )
     if to_XYXY:
         boxes[:, :, :2] -= boxes[:, :, 2:] / 2
         boxes[:, :, 2:] += boxes[:, :, :2]
