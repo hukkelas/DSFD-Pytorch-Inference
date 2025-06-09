@@ -1,6 +1,5 @@
 [project]
 name="face_detection"
-version="0.2.1"
 description="A simple and lightweight package for state of the art face detection with GPU support."
 readme="README.md"
 requires-python=">=3.9"
@@ -13,9 +12,11 @@ dependencies = [
     "torch",
     "torchvision",
 ]
+dynamic = ["version"]  # Remove static version and add this line
 
 [build-system]
-requires = ["setuptools", "torch"]
+requires = ["setuptools", "torch", "hatchling", "uv-dynamic-versioning"]
+build-backend = "hatchling.build"
 
 [tool.setuptools]
 packages = ["face_detection"]
@@ -26,3 +27,5 @@ dev = [
     "pytest>=8.3.5",
     "ruff"
 ]
+[tool.hatch.version]
+source = "uv-dynamic-versioning"

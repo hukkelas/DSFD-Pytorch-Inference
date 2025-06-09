@@ -177,9 +177,9 @@ class SSD(nn.Module):
         # apply multibox head to source layers
 
         featuremap_size = []
-        for x, loc, c in zip(sources, self.loc, self.conf):
+        for x, layer, c in zip(sources, self.loc, self.conf):
             featuremap_size.append([x.shape[2], x.shape[3]])
-            loc.append(loc(x).permute(0, 2, 3, 1).contiguous())
+            loc.append(layer(x).permute(0, 2, 3, 1).contiguous())
 
             # Max in out
             len_conf = len(conf)
