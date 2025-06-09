@@ -7,24 +7,23 @@ from .box_utils import scale_boxes
 
 
 def check_image(im: np.ndarray):
-    assert im.dtype == np.uint8,\
-        f"Expect image to have dtype np.uint8. Was: {im.dtype}"
-    assert len(im.shape) == 4,\
-        f"Expected image to have 4 dimensions. got: {im.shape}"
-    assert im.shape[-1] == 3,\
+    assert im.dtype == np.uint8, f"Expect image to have dtype np.uint8. Was: {im.dtype}"
+    assert len(im.shape) == 4, f"Expected image to have 4 dimensions. got: {im.shape}"
+    assert im.shape[-1] == 3, (
         f"Expected image to be RGB, got: {im.shape[-1]} color channels"
+    )
 
 
 class Detector(ABC):
-
     def __init__(
-            self,
-            confidence_threshold: float,
-            nms_iou_threshold: float,
-            device: torch.device,
-            max_resolution: int,
-            fp16_inference: bool,
-            clip_boxes: bool):
+        self,
+        confidence_threshold: float,
+        nms_iou_threshold: float,
+        device: torch.device,
+        max_resolution: int,
+        fp16_inference: bool,
+        clip_boxes: bool,
+    ):
         """
         Args:
             confidence_threshold (float): Threshold to filter out bounding boxes
@@ -40,11 +39,9 @@ class Detector(ABC):
         self.max_resolution = max_resolution
         self.fp16_inference = fp16_inference
         self.clip_boxes = clip_boxes
-        self.mean = np.array(
-            [123, 117, 104], dtype=np.float32).reshape(1, 1, 1, 3)
+        self.mean = np.array([123, 117, 104], dtype=np.float32).reshape(1, 1, 1, 3)
 
-    def detect(
-            self, image: np.ndarray, shrink=1.0) -> np.ndarray:
+    def detect(self, image: np.ndarray, shrink=1.0) -> np.ndarray:
         """Takes an RGB image and performs and returns a set of bounding boxes as
             detections
         Args:
@@ -77,7 +74,7 @@ class Detector(ABC):
         """
         final_output = []
         for i in range(len(boxes)):
-            scores = boxes[i, :,  4]
+            scores = boxes[i, :, 4]
             keep_idx = scores >= self.confidence_threshold
             boxes_ = boxes[i, keep_idx, :-1]
             scores = scores[keep_idx]
@@ -99,7 +96,7 @@ class Detector(ABC):
         shrink_factor = self.max_resolution / max((height, width))
         if shrink_factor <= shrink:
             shrink = shrink_factor
-        size = (int(height*shrink), int(width*shrink))
+        size = (int(height * shrink), int(width * shrink))
         image = torch.nn.functional.interpolate(image, size=size)
         return image
 
@@ -130,8 +127,7 @@ class Detector(ABC):
         return boxes
 
     @torch.no_grad()
-    def batched_detect(
-            self, image: np.ndarray, shrink=1.0) -> typing.List[np.ndarray]:
+    def batched_detect(self, image: np.ndarray, shrink=1.0) -> typing.List[np.ndarray]:
         """Takes N RGB image and performs and returns a set of bounding boxes as
             detections
         Args:
@@ -150,5 +146,6 @@ class Detector(ABC):
 
     def validate_detections(self, boxes: typing.List[np.ndarray]):
         for box in boxes:
-            assert np.all(box[:, 4] <= 1) and np.all(box[:, 4] >= 0),\
+            assert np.all(box[:, 4] <= 1) and np.all(box[:, 4] >= 0), (
                 f"Confidence values not valid: {box}"
+            )

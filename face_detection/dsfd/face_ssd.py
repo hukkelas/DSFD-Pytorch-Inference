@@ -7,14 +7,13 @@ from ..box_utils import batched_decode
 
 
 class FEM(nn.Module):
-
     def __init__(self, channel_size):
         super(FEM, self).__init__()
         self.cs = channel_size
         self.cpm1 = nn.Conv2d(self.cs, 256, kernel_size=3, padding=1)
         self.cpm2 = nn.Conv2d(self.cs, 256, kernel_size=3, dilation=2, padding=2)
         self.cpm3 = nn.Conv2d(256, 128, kernel_size=3, padding=1)
-        self.cpm4 = nn.Conv2d(256, 128, kernel_size=3, dilation=2,  padding=2)
+        self.cpm4 = nn.Conv2d(256, 128, kernel_size=3, dilation=2, padding=2)
         self.cpm5 = nn.Conv2d(128, 128, kernel_size=3, padding=1)
 
     def forward(self, x):
@@ -46,13 +45,13 @@ class SSD(nn.Module):
 
     def __init__(self, cfg):
         super(SSD, self).__init__()
-        self.num_classes = 2 # Background and face
+        self.num_classes = 2  # Background and face
         self.cfg = cfg
 
         resnet = torchvision.models.resnet152(pretrained=False)
         self.layer1 = nn.Sequential(
-            resnet.conv1, resnet.bn1, resnet.relu,
-            resnet.maxpool, resnet.layer1)
+            resnet.conv1, resnet.bn1, resnet.relu, resnet.maxpool, resnet.layer1
+        )
         self.layer2 = nn.Sequential(resnet.layer2)
         self.layer3 = nn.Sequential(resnet.layer3)
         self.layer4 = nn.Sequential(resnet.layer4)
@@ -62,7 +61,7 @@ class SSD(nn.Module):
             nn.ReLU(inplace=True),
             nn.Conv2d(512, 512, kernel_size=3, padding=1, stride=2),
             nn.BatchNorm2d(512),
-            nn.ReLU(inplace=True)
+            nn.ReLU(inplace=True),
         )
         self.layer6 = nn.Sequential(
             nn.Conv2d(512, 128, kernel_size=1),
@@ -70,7 +69,7 @@ class SSD(nn.Module):
             nn.ReLU(inplace=True),
             nn.Conv2d(128, 256, kernel_size=3, padding=1, stride=2),
             nn.BatchNorm2d(256),
-            nn.ReLU(inplace=True)
+            nn.ReLU(inplace=True),
         )
 
         output_channels = [256, 512, 1024, 2048, 512, 256]
@@ -95,7 +94,7 @@ class SSD(nn.Module):
         self.cpm6_2 = FEM(cpm_in[4])
         self.cpm7_2 = FEM(cpm_in[5])
 
-        head = pa_multibox(output_channels, self.cfg['mbox'], self.num_classes)  
+        head = pa_multibox(output_channels, self.cfg["mbox"], self.num_classes)
         self.loc = nn.ModuleList(head[0])
         self.conf = nn.ModuleList(head[1])
 
@@ -103,14 +102,21 @@ class SSD(nn.Module):
         self.softmax = nn.Softmax(dim=-1)
 
         # Cache to stop computing new priors per fowrard pass
-        self.prior_cache = {
-        }
+        self.prior_cache = {}
 
     def init_priors(self, feature_maps, image_size):
-
         # Hacky key system, but works....
-        key = ".".join([str(item) for i in range(len(feature_maps)) for item in feature_maps[i]]) + \
-              "," + ".".join([str(_) for _ in image_size])
+        key = (
+            ".".join(
+                [
+                    str(item)
+                    for i in range(len(feature_maps))
+                    for item in feature_maps[i]
+                ]
+            )
+            + ","
+            + ".".join([str(_) for _ in image_size])
+        )
         if key in self.prior_cache:
             return self.prior_cache[key].clone()
 
@@ -150,13 +156,10 @@ class SSD(nn.Module):
         conv6_2_x = self.layer5(fc7_x)
         conv7_2_x = self.layer6(conv6_2_x)
 
-        # FPN              
-        lfpn3 = self._upsample_product(
-            self.latlayer3(fc7_x), self.smooth3(conv5_3_x))
-        lfpn2 = self._upsample_product(
-            self.latlayer2(lfpn3), self.smooth2(conv4_3_x))
-        lfpn1 = self._upsample_product(
-            self.latlayer1(lfpn2), self.smooth1(conv3_3_x))
+        # FPN
+        lfpn3 = self._upsample_product(self.latlayer3(fc7_x), self.smooth3(conv5_3_x))
+        lfpn2 = self._upsample_product(self.latlayer2(lfpn3), self.smooth2(conv4_3_x))
+        lfpn1 = self._upsample_product(self.latlayer1(lfpn2), self.smooth1(conv3_3_x))
 
         conv5_3_x = lfpn3
         conv4_3_x = lfpn2
@@ -168,12 +171,13 @@ class SSD(nn.Module):
             self.cpm5_3(conv5_3_x),
             self.cpm7(fc7_x),
             self.cpm6_2(conv6_2_x),
-            self.cpm7_2(conv7_2_x)]
+            self.cpm7_2(conv7_2_x),
+        ]
         # Feature Enhance Module
         # apply multibox head to source layers
 
         featuremap_size = []
-        for (x, l, c) in zip(sources, self.loc, self.conf):
+        for x, l, c in zip(sources, self.loc, self.conf):
             featuremap_size.append([x.shape[2], x.shape[3]])
             loc.append(l(x).permute(0, 2, 3, 1).contiguous())
 
@@ -183,23 +187,23 @@ class SSD(nn.Module):
 
             conf.append(out.permute(0, 2, 3, 1).contiguous())
         # Progressive Anchor
-        mbox_num = self.cfg['mbox'][0]
-        face_loc = torch.cat([
-            o[:, :, :, :4*mbox_num].contiguous().view(o.size(0), -1)
-            for o in loc], dim=1)
-        face_conf = torch.cat([
-            o[:, :, :, :2*mbox_num].contiguous().view(o.size(0), -1)
-            for o in conf], dim=1)
+        mbox_num = self.cfg["mbox"][0]
+        face_loc = torch.cat(
+            [o[:, :, :, : 4 * mbox_num].contiguous().view(o.size(0), -1) for o in loc],
+            dim=1,
+        )
+        face_conf = torch.cat(
+            [o[:, :, :, : 2 * mbox_num].contiguous().view(o.size(0), -1) for o in conf],
+            dim=1,
+        )
         # Test Phase
         self.priors = self.init_priors(featuremap_size, image_size)
         self.priors = self.priors.to(face_conf.device)
-        conf_preds = face_conf.view(
-            face_conf.size(0), -1, self.num_classes).softmax(dim=-1)
-        face_loc = face_loc.view(face_loc.size(0), -1, 4)
-        boxes = batched_decode(
-            face_loc, self.priors,
-            self.cfg["variance"]
+        conf_preds = face_conf.view(face_conf.size(0), -1, self.num_classes).softmax(
+            dim=-1
         )
+        face_loc = face_loc.view(face_loc.size(0), -1, 4)
+        boxes = batched_decode(face_loc, self.priors, self.cfg["variance"])
         scores = conf_preds.view(-1, self.priors.shape[0], 2)[:, :, 1:]
         output = torch.cat((boxes, scores), dim=-1)
         return output
@@ -214,12 +218,11 @@ class SSD(nn.Module):
         if len(chunk) == 6:
             out = torch.cat([out, chunk[4], chunk[5]], dim=1)
         elif len(chunk) == 8:
-            out = torch.cat(
-                [out, chunk[4], chunk[5], chunk[6], chunk[7]], dim=1)
+            out = torch.cat([out, chunk[4], chunk[5], chunk[6], chunk[7]], dim=1)
         return out
 
     def _upsample_product(self, x, y):
-        '''Upsample and add two feature maps.
+        """Upsample and add two feature maps.
         Args:
           x: (Variable) top feature map to be upsampled.
           y: (Variable) lateral feature map.
@@ -233,11 +236,12 @@ class SSD(nn.Module):
         conv2d feature map size: [N,_,8,8] ->
         upsampled feature map size: [N,_,16,16]
         So we choose bilinear upsample which supports arbitrary output sizes.
-        '''
+        """
         # Deprecation warning. align_corners=False default in 0.4.0, but in 0.3.0 it was True
         # Original code was written in 0.3.1, I guess this is correct.
         return y * F.interpolate(
-            x, size=y.shape[2:], mode="bilinear", align_corners=True)
+            x, size=y.shape[2:], mode="bilinear", align_corners=True
+        )
 
 
 class DeepHeadModule(nn.Module):
@@ -248,13 +252,19 @@ class DeepHeadModule(nn.Module):
         self._mid_channels = min(self._input_channels, 256)
 
         self.conv1 = nn.Conv2d(
-            self._input_channels, self._mid_channels, kernel_size=3, padding=1)
+            self._input_channels, self._mid_channels, kernel_size=3, padding=1
+        )
         self.conv2 = nn.Conv2d(
-            self._mid_channels, self._mid_channels, kernel_size=3, padding=1)
+            self._mid_channels, self._mid_channels, kernel_size=3, padding=1
+        )
         self.conv3 = nn.Conv2d(
-            self._mid_channels, self._mid_channels, kernel_size=3, padding=1)
+            self._mid_channels, self._mid_channels, kernel_size=3, padding=1
+        )
         self.conv4 = nn.Conv2d(
-            self._mid_channels, self._output_channels, kernel_size=1,)
+            self._mid_channels,
+            self._output_channels,
+            kernel_size=1,
+        )
 
     def forward(self, x):
         out = self.conv1(x).relu()
@@ -278,10 +288,6 @@ def pa_multibox(output_channels, mbox_cfg, num_classes):
         else:
             loc_output = 12
             conf_output = 6
-        loc_layers += [
-            DeepHeadModule(input_channels, mbox_cfg[k] * loc_output)]
-        conf_layers += [
-            DeepHeadModule(input_channels, mbox_cfg[k] * (2+conf_output))]
+        loc_layers += [DeepHeadModule(input_channels, mbox_cfg[k] * loc_output)]
+        conf_layers += [DeepHeadModule(input_channels, mbox_cfg[k] * (2 + conf_output))]
     return (loc_layers, conf_layers)
-
-

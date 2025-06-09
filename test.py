@@ -14,25 +14,17 @@ def draw_faces(im, bboxes):
 if __name__ == "__main__":
     impaths = "images"
     impaths = glob.glob(os.path.join(impaths, "*.jpg"))
-    detector = face_detection.build_detector(
-        "DSFDDetector",
-        max_resolution=1080
-    )
+    detector = face_detection.build_detector("DSFDDetector", max_resolution=1080)
     for impath in impaths:
-        if impath.endswith("out.jpg"): continue
+        if impath.endswith("out.jpg"):
+            continue
         im = cv2.imread(impath)
         print("Processing:", impath)
         t = time.time()
-        dets = detector.detect(
-            im[:, :, ::-1]
-        )[:, :4]
-        print(f"Detection time: {time.time()- t:.3f}")
+        dets = detector.detect(im[:, :, ::-1])[:, :4]
+        print(f"Detection time: {time.time() - t:.3f}")
         draw_faces(im, dets)
         imname = os.path.basename(impath).split(".")[0]
-        output_path = os.path.join(
-            os.path.dirname(impath),
-            f"{imname}_out.jpg"
-        )
+        output_path = os.path.join(os.path.dirname(impath), f"{imname}_out.jpg")
 
         cv2.imwrite(output_path, im)
-        
