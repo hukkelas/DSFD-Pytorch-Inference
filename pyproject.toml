@@ -24,4 +24,5 @@ packages = ["face_detection"]
 dev = [
     "opencv-python",
     "pytest>=8.3.5",
+    "ruff"
 ]

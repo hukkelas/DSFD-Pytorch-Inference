@@ -9,6 +9,8 @@ jobs:
       - name: Setup UV
         uses: ./.github/actions/setup-uv
 
-      - name: Build
+      - name: Install ruff
+        run: uv add ruff
+      - name: Run ruff
         run: uv run ruff check 
 
