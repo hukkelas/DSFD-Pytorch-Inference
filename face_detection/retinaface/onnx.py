@@ -39,7 +39,7 @@ class RetinaNetDetectorONNX(torch.nn.Module):
     def export_onnx(self, onnx_filepath):
         try:
             image = cv2.imread("images/0_Parade_marchingband_1_765.jpg")
-        except:
+        except Exception:
             raise FileNotFoundError()
 
         height, width = self.input_imshape
@@ -62,7 +62,7 @@ class RetinaNetDetectorONNX(torch.nn.Module):
             export_params=True,
             opset_version=10,  # functional interpolate does not support opset 11+
         )
-        np.save(f"outputs.npy", actual_outputs)
+        np.save("outputs.npy", actual_outputs)
 
     @torch.no_grad()
     def forward(self, image):

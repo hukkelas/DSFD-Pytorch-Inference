@@ -3,7 +3,6 @@ import numpy as np
 import typing
 from .face_ssd import SSD
 from .config import resnet152_model_config
-from .. import torch_utils
 from torch.hub import load_state_dict_from_url
 from ..base import Detector
 from ..build import DETECTOR_REGISTRY

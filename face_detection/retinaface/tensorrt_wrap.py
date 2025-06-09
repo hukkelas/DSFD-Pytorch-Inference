@@ -1,5 +1,4 @@
 import pycuda.driver as cuda
-import pycuda.autoinit
 import os
 import numpy as np
 import cv2

@@ -16,7 +16,7 @@ def build_detector(
     clip_boxes: bool = False,
 ) -> Detector:
     assert name in available_detectors, (
-        f"Detector not available. Chooce one of the following"
+        "Detector not available. Chooce one of the following"
         + ",".join(available_detectors)
     )
     args = dict(
